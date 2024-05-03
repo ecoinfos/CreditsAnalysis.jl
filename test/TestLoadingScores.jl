@@ -8,7 +8,7 @@ import CreditsAnalysis.LoadingScores as LS
 
 @testset "CSV file loading test" begin
   #test_csv1 = "test/test_csv1.csv"
-  test_csv1 = joinpath(@__DIR__, "test_csv1.csv")
+  test_csv1 = joinpath(@__DIR__, "test/test_csv1.csv")
   expected_df_from_csv = DataFrame(SN=[1, 2, 3], col1 = [1, 2, 3], col2 = [1, 2, 3])
   @test LS.read_csv_to_dataframe(test_csv1) == expected_df_from_csv
 
