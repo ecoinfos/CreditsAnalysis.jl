@@ -42,6 +42,6 @@ end
   test_dfB2 = DataFrame(SN = 1:2, col1 = [3, 3], col2 = [4, 4])
   test_dfC2 = DataFrame(SN = 1:2, col2 = [5, 6], col3 = [5, 6])
 
-  df_dict2 = Dict("dfA" => test_dfA, "dfB" => test_dfB, "dfC" => test_dfC)
+  df_dict2 = Dict("dfA" => test_dfA2, "dfB" => test_dfB2, "dfC" => test_dfC2)
   @test_throws ErrorException LS.column_titles_comparison(df_dict2)
 end
