@@ -8,16 +8,19 @@ import CreditsAnalysis.LoadingScores as LS
 
 @testset "CSV file loading test" begin
   #test_csv1 = "test/test_csv1.csv"
-  test_csv1 = joinpath(@__DIR__, "test/test_csv1.csv")
+  test_csv1 = joinpath(@__DIR__, "test_csv1.csv")
   expected_df_from_csv = DataFrame(SN=[1, 2, 3], col1 = [1, 2, 3], col2 = [1, 2, 3])
   @test LS.read_csv_to_dataframe(test_csv1) == expected_df_from_csv
 
-  test_csv2 = "test/test_csv1.xlsx"
+  test_csv2 = joinpath(@__DIR__, "test_csv1.xlsx")
   @test_throws ErrorException LS.read_csv_to_dataframe(test_csv2)
 end
 
 @testset "multiple CSVs loading test" begin
-  test_data_paths1=["test/test_csv1.csv", "test/test_csv2.csv"]
+  test_data_paths1=[
+    joinpath(@__DIR__, "test_csv1.csv"),
+    joinpath(@__DIR__, "test_csv2.csv")
+  ]
   df_dict1 = LS.read_multiple_csvs_to_dataframes(test_data_paths1)
   expected_test_dfA = DataFrame(SN = 1:3, col1 = [1, 2, 3], col2 = [1, 2, 3])
   expected_test_dfB = DataFrame(SN = 1:3, col1 = [4, 5, 6], col2 = [4, 5, 6])
@@ -25,9 +28,10 @@ end
   @test df_dict1[:dfB] == expected_test_dfB
 
   test_data_paths2=[
-    "test/test_csv1.csv", 
-    "test/test_csv2.csv",
-    "test/test_csv1_duplicated.csv"]
+    joinpath(@__DIR__, "test_csv1.csv"), 
+    joinpath(@__DIR__, "test_csv2.csv"),
+    joinpath(@__DIR__, "test_csv1_duplicated.csv")
+  ]
   @test_throws ErrorException LS.read_multiple_csvs_to_dataframes(test_data_paths2)
 end
 
