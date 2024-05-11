@@ -106,6 +106,11 @@ function convert_column_types(df_transformed::DataFrame)::DataFrame
 
   df_transformed.Grades = parse.(Int64, df_transformed.Grades)
   df_transformed.IDs = parse.(Int64, df_transformed.IDs)
+  for id in df_transformed[!, :IDs] 
+    if ndigits(id) != 8
+      error("ID $id is too short") 
+    end
+  end
   df_transformed.Names = convert.(String, df_transformed.Names)
   df_transformed.DataGroups = convert.(String, df_transformed.DataGroups)
 
