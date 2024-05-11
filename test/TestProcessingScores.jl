@@ -33,7 +33,21 @@ end
     Q1 = ["O", "X"],
     Q2 = ["O", "O"]
   )
-  PS.count_correct_responses(df1)
-  
+  df1_res = PS.count_correct_responses!(df1, "Q", Dict("O"=>5, "X"=>0))
+  @test eltype(df1_res.Q1) == Int64
+  @test eltype(df1_res.Q2) == Int64
+  @test unique(df1_res.Q1) == [5, 0]
+
+  df2 = DataFrame(
+    SN = 1:2,
+    IDs = [2024194998, 2024194998],
+    Names = ["John", "Jane"],
+    DataGroups = ["RES", "RES"],
+    Q1 = ["O", "X"],
+    Q2 = ["O", "O"]
+  )
+  @test_throws ErrorException PS.count_correct_responses!(
+    df2, "Q", Dict("O"=>5, "X"=>0)
+  )
 end
 
