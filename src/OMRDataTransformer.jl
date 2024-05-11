@@ -1,4 +1,4 @@
-module ExamScoresTransformer
+module OMRDataTransformer
 
 using CSV
 using DataFrames
@@ -98,6 +98,11 @@ function replace_missings_from_df(df_transformed::DataFrame)::DataFrame
 end
 
 function convert_column_types(df_transformed::DataFrame)::DataFrame
+  """
+  Convert the data types of the columns in the transformed data frame to
+  the appropriate types. The Grades and IDs columns are converted to Int64
+  while the Names and DataGroups columns are converted to String.
+  """
 
   df_transformed.Grades = parse.(Int64, df_transformed.Grades)
   df_transformed.IDs = parse.(Int64, df_transformed.IDs)
@@ -108,6 +113,11 @@ function convert_column_types(df_transformed::DataFrame)::DataFrame
 end
 
 function remove_unnecessary_columns(df_transformed::DataFrame)::DataFrame
+  """
+  Remove unnecessary columns from the transformed data frame. The columns
+  removed are: No, Scores, TotalScores, Scores100, and Ranks.
+  """
+
   df_transformed = select!(
     df_transformed, Not(:No, :Scores, :TotalScores, :Scores100, :Ranks)
   )
@@ -115,6 +125,11 @@ function remove_unnecessary_columns(df_transformed::DataFrame)::DataFrame
 end
 
 function remove_unnecessary_marks(df_transformed::DataFrame)::DataFrame
+  """
+  Remove unnecessary marks from the transformed data frame. The marks
+  removed are: * from the Names column.
+  """
+
   for col in names(df_transformed) 
     if  eltype(df_transformed[!, col]) == String
       df_transformed[!, col] = replace.(df_transformed[!, col], "*"=> "")
@@ -125,19 +140,24 @@ function remove_unnecessary_marks(df_transformed::DataFrame)::DataFrame
 end
 
 function find_missing_rows(col)
-    return findall(ismissing, col)
+  return findall(ismissing, col)
 end
 
 function find_missing_rows_dict(df::DataFrame)
-    missing_rows = Dict{String, Vector{Int64}}()
-    for (col_name, col_data) in zip(names(df), eachcol(df))
-        missing_indices = find_missing_rows(col_data)
-        if !isempty(missing_indices)
-            missing_rows[col_name] = missing_indices
-        end
-    end
+  """
+  Find missing values in the data frame and return a dictionary of column
+  names and the row indices of the missing values in the respective columns.
+  """
 
-    return missing_rows
+  missing_rows = Dict{String, Vector{Int64}}()
+  for (col_name, col_data) in zip(names(df), eachcol(df))
+    missing_indices = find_missing_rows(col_data)
+    if !isempty(missing_indices)
+      missing_rows[col_name] = missing_indices
+    end
+  end
+
+  return missing_rows
 end
 
 end
