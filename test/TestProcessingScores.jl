@@ -17,7 +17,7 @@ import CreditsAnalysis.ProcessingScores as PS
     Q2 = ["1", "1", "O", "2", "2", "O"]
   )
 
-  df_res = PS.collect_results(df)
+  df_res = PS.collect_results(df, "RES")
   df_length = length(df[!, 1])
   @test length(df_res[!, 1]) == Int(df_length / 3)
   @test unique(df_res.DataGroups) == ["RES"]
