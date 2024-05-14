@@ -8,15 +8,15 @@ import CreditsAnalysis.OMRDataTransformer as ODT
 
 
 @testset "CSV data file recognition test" begin
-  file_path_correct_csv = joinpath(@__DIR__, "test_csv1.csv")
+  file_path_correct_csv = joinpath(@__DIR__, "test/test_csv1.csv")
   expected_df = DataFrame(SN = [1, 2, 3], col1 = [1, 2, 3], col2 = [1, 2, 3])
-  @test ODT.load_exam_scores_data(file_path_correct_csv) == expected_df
+  @test ODT.load_exam_data(file_path_correct_csv) == expected_df
 
   file_path_xlsx = joinpath(@__DIR__, "test/test_csv1.xlsx")
-  @test_throws ArgumentError ODT.load_exam_scores_data(file_path_xlsx)
+  @test_throws ErrorException ODT.load_exam_data(file_path_xlsx)
 
   file_path_wrong_csv = joinpath(@__DIR__, "test/test_csv1_xlsx.csv") 
-  @test_throws ArgumentError ODT.load_exam_scores_data(file_path_wrong_csv)
+  @test_throws ErrorException ODT.load_exam_data(file_path_wrong_csv)
 end
 
 @testset "Questions column titles generation test" begin

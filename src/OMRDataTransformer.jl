@@ -4,12 +4,12 @@ using CSV
 using DataFrames
 using ShiftedArrays
 
-export load_exam_scores_data, make_questions_colnames_vector,
+export load_exam_data, make_questions_colnames_vector,
        transform_omr_data, replace_missings_from_df, convert_column_types,
        remove_unnecessary_columns, remove_unnecessary_marks,
        find_missing_rows_dict
 
-function load_exam_scores_data(file_path::String)::DataFrame
+function load_exam_data(file_path::String)::DataFrame
   """
   Load examination score data file saved in CSV format. The data is from
   an Optical Mark Recognition (OMR) sheet. Make sure that the data in xls
