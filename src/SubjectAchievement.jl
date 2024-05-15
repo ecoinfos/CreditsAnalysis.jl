@@ -10,9 +10,9 @@ export join_scores_with_subjects, calculate_subject_avgs,
 
 
 function join_scores_with_subjects(
-  df_questions::DataFrame, df_anp_res::DataFrame
+  df_questions::DataFrame, df_anp_res::DataFrame, target_col::Symbol
 )::DataFrame
-  df_questions_selected = select(df_questions, :QuestionIDs, :Subjects)
+  df_questions_selected = select(df_questions, :QuestionIDs, target_col)
   question_cols = names(df_anp_res, r"Q\d+")
   df_anp_res_long = stack(
     df_anp_res, question_cols, variable_name="QuestionIDs", value_name="Score"
@@ -24,7 +24,10 @@ function join_scores_with_subjects(
   return df_joined
 end
 
-function calculate_subject_avgs(df_joined::DataFrame)::DataFrame
+# Studuent Achievement Analysis (SAA)
+# SAA 1. Analysis of achievement on subjects
+
+function calculate_total_subject_avgs(df_joined::DataFrame)::DataFrame
   df_avg_scores_per_question = combine(
     groupby(df_joined, [:Subjects, :QuestionIDs]), :Score => mean => :AvgScore
   )
@@ -37,7 +40,7 @@ function calculate_subject_avgs(df_joined::DataFrame)::DataFrame
   return df_avg_scores_per_subject
 end
 
-function calculate_student_avgs(df_joined::DataFrame)::DataFrame
+function calculate_student_subject_avgs(df_joined::DataFrame)::DataFrame
   df_avg_scores_per_student = combine(
     groupby(df_joined, [:IDs, :Names, :Subjects]), :Score => mean => :AvgScore
   )
@@ -111,5 +114,6 @@ function plot_achievement_radar(
   fig
 
 end
+
 
 end
