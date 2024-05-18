@@ -5,8 +5,12 @@ using CSV
 using CairoMakie
 using Statistics
 
-export join_scores_with_subjects, calculate_subject_avgs,
-       calculate_student_avgs, plot_achievement_radar
+export join_scores_with_subjects, calculate_total_subject_avgs,
+       calculate_student_subject_avgs, plot_achievement_radar,
+       calculate_total_origin_avg, calculate_total_origin_std,
+       calculate_student_origin_avg, calculate_student_origin_std,
+       plot_origination_bar_graph
+
 
 
 function join_scores_with_subjects(
@@ -114,6 +118,136 @@ function plot_achievement_radar(
   fig
 
 end
+
+# SAA 2. Analysis of achievement on question origins
+
+function calculate_total_origin_avg(
+  df_joined::DataFrame
+)::Tuple{Float64, Float64} 
+  orig_rows = df_joined.Origin .== "오리지널"
+  quiz_rows = df_joined.Origin .== "퀴즈"
+
+  orig_avg = mean((df_joined[orig_rows, :Score]))
+  quiz_avg = mean((df_joined[quiz_rows, :Score]))
+  
+  return orig_avg, quiz_avg
+end
+
+function calculate_total_origin_std(
+    df_joined::DataFrame
+)::Tuple{Float64, Float64}
+  orig_rows = df_joined.Origin .== "오리지널"
+  quiz_rows = df_joined.Origin .== "퀴즈"
+  
+  orig_std = std(df_joined[orig_rows, :Score])
+  quiz_std = std(df_joined[quiz_rows, :Score])
+  
+  return orig_std, quiz_std
+end
+
+function calculate_student_origin_avg(
+    df_joined::DataFrame,
+    student_id::Int64
+)::Tuple{Float64, Float64}
+  student_rows = df_joined.IDs .== student_id
+  
+  orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
+  quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
+  
+  student_orig_avg = mean(df_joined[orig_rows, :Score])
+  student_quiz_avg = mean(df_joined[quiz_rows, :Score])
+  
+  return student_orig_avg, student_quiz_avg
+end
+
+function calculate_student_origin_std(
+    df_joined::DataFrame,
+    student_id::Int64
+)::Tuple{Float64, Float64}
+  student_rows = df_joined.IDs .== student_id
+  
+  orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
+  quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
+  
+  student_orig_std = std(df_joined[orig_rows, :Score])
+  student_quiz_std = std(df_joined[quiz_rows, :Score])
+  
+  return student_orig_std, student_quiz_std
+end
+
+function plot_origination_bar_graph(data_dict::Dict{String, Real})
+    categories = ["오리지널", "퀴즈"]
+    bar_labels = ["전체 평균", "학생 평균"]
+
+    fig = Figure(size = (600, 400))
+    ax = Axis(fig[1, 1], ylabel = "점수", xticks = (1:2, categories))
+
+    # Create total average bars
+    bars1 = barplot!(
+        ax,
+        1 .+ [-0.2, 0.2],
+        [data_dict["orig_avg"], data_dict["quiz_avg"]],
+        width = 0.35
+    )
+    errorbars!(
+        ax,
+        1 .+ [-0.2, 0.2],
+        [data_dict["orig_avg"], data_dict["quiz_avg"]],
+        [data_dict["orig_std"], data_dict["quiz_std"]],
+        whiskerwidth = 10
+    )
+
+    # Create student average bars
+    bars2 = barplot!(
+        ax,
+        2 .+ [-0.2, 0.2],
+        [data_dict["student_orig_avg"], data_dict["student_quiz_avg"]],
+        width = 0.35
+    )
+    errorbars!(
+        ax,
+        2 .+ [-0.2, 0.2],
+        [data_dict["student_orig_avg"], data_dict["student_quiz_avg"]],
+        [data_dict["student_orig_std"], data_dict["student_quiz_std"]],
+        whiskerwidth = 10
+    )
+
+    # Convert bars to iterable objects
+    bars1_iterable = [bars1[i] for i in 1:length(bars1)]
+    bars2_iterable = [bars2[i] for i in 1:length(bars2)]
+
+    # Add labels
+    for (bar, label) in zip(bars1_iterable, bar_labels)
+        text!(
+            ax,
+            "$(label)",
+            position = (bar.x[], bar.y[] + bar.height[] + 0.1),
+            align = (:center, :bottom),
+            textsize = 10
+        )
+    end
+    for (bar, label) in zip(bars2_iterable, bar_labels)
+        text!(
+            ax,
+            "$(label)",
+            position = (bar.x[], bar.y[] + bar.height[] + 0.1),
+            align = (:center, :bottom),
+            textsize = 10
+        )
+    end
+
+    ax.xticks = (1:2, categories)
+    ax.xticksize = 10
+    ax.yticksize = 10
+
+    fig[1, 2] = Legend(fig, ax, "평균", framevisible = false)
+
+    return fig
+end
+
+
+
+
 
 
 end
