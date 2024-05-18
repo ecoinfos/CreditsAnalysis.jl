@@ -68,7 +68,17 @@ function transform_omr_data(
   select!(df, Not(9 + no_questions + 1:size(df, 2)))
 
   # Prepare column names
-  new_parameters_col_names = [:No, :Grades, :IDs, :Names, :Scores, :TotalScores, :Scores100, :Ranks, :DataGroups]
+  new_parameters_col_names = [
+    :No,
+    :Grades,
+    :IDs,
+    :Names,
+    :Scores,
+    :TotalScores,
+    :Scores100,
+    :Ranks,
+    :DataGroups
+  ]
   combined_col_names = vcat(new_parameters_col_names, new_questions_colnames)
   rename!(df, combined_col_names)
 
