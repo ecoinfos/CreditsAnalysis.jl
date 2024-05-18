@@ -27,8 +27,7 @@ function convert_ox_to_scores!(
   Find all columns in the DataFrame that start with the specified prefix after
   duplication test. Then convert the values in each column to the new values
   specified in the `old_new_pair` dictionary. The converted values are then
-  converted to Int64 types and summed up to calculate the total score for
-  each student.
+  converted to Int64 types. 
   """
   student_ids = df.IDs
   for i in eachindex(student_ids) 
@@ -47,24 +46,15 @@ function convert_ox_to_scores!(
 end
 
 function calculate_score_sums(df::DataFrame, col_prefix::String)::DataFrame
+  """
+  Calculate the sum of all columns in the DataFrame that start with the
+  specified prefix. The resulting sum is stored in a new column called
+  `ScoreSums`.
+  """
   cols = filter(col -> startswith(col, col_prefix), names(df)) 
   df[!, :ScoreSums] = sum(eachcol(df[!, cols]))
 
   return df
-end
-
-function plot_histogram(df::DataFrame, bins::Int64, title::String, period::String)
-  fig = Figure(size=(800, 600)) 
-
-  ax = Axis(
-    fig[1, 1],
-    title = title,
-    xlabel="Anatomy & Physiology $period Scores (pts.)",
-    ylabel="Number of students (persons)"
-  )
-  hist!(ax, df.ScoreSums, bins=bins, color=:steelblue, strokewidth=0)
-
-  return fig
 end
 
 end
