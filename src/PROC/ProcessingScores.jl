@@ -4,8 +4,7 @@ using CreditsAnalysis
 using DataFrames
 using CairoMakie
 
-export collect_results, convert_ox_to_scores!, calculate_score_sums,
-       plot_histogram
+export collect_results, convert_ox_to_scores!, calculate_score_sums
 
 
 function collect_results(df::DataFrame, cat::String)::DataFrame
