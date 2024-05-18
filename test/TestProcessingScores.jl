@@ -24,7 +24,7 @@ import CreditsAnalysis.ProcessingScores as PS
   @test unique(df_res.Q1) == ["O", "X"]
 end
 
-@testset "Count correct answers test" begin
+@testset "OX to scores conversion test" begin
   df1 = DataFrame(
     SN = 1:2,
     IDs = [2024194998, 2024194999],
@@ -33,7 +33,7 @@ end
     Q1 = ["O", "X"],
     Q2 = ["O", "O"]
   )
-  df1_res = PS.count_correct_responses!(df1, "Q", Dict("O"=>5, "X"=>0))
+  df1_res = PS.convert_ox_to_scores!(df1, "Q", Dict("O"=>5, "X"=>0))
   @test eltype(df1_res.Q1) == Int64
   @test eltype(df1_res.Q2) == Int64
   @test unique(df1_res.Q1) == [5, 0]
@@ -46,7 +46,7 @@ end
     Q1 = ["O", "X"],
     Q2 = ["O", "O"]
   )
-  @test_throws ErrorException PS.count_correct_responses!(
+  @test_throws ErrorException PS.convert_ox_to_scores!(
     df2, "Q", Dict("O"=>5, "X"=>0)
   )
 end
