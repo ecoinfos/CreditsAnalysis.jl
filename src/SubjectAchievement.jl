@@ -7,10 +7,7 @@ using Statistics
 
 export join_scores_with_subjects, calculate_total_subject_avgs,
        calculate_student_subject_avgs, plot_achievement_radar,
-       calculate_total_origin_avg, calculate_total_origin_std,
-       calculate_student_origin_avg, calculate_student_origin_std,
-       plot_origination_bar_graph
-
+       calculate_origin_stats, plot_origination_bar_graph
 
 
 function join_scores_with_subjects(
@@ -121,58 +118,49 @@ end
 
 # SAA 2. Analysis of achievement on question origins
 
-function calculate_total_origin_avg(
-  df_joined::DataFrame
-)::Tuple{Float64, Float64} 
-  orig_rows = df_joined.Origin .== "오리지널"
-  quiz_rows = df_joined.Origin .== "퀴즈"
-
-  orig_avg = mean((df_joined[orig_rows, :Score]))
-  quiz_avg = mean((df_joined[quiz_rows, :Score]))
-  
-  return orig_avg, quiz_avg
-end
-
-function calculate_total_origin_std(
-    df_joined::DataFrame
-)::Tuple{Float64, Float64}
-  orig_rows = df_joined.Origin .== "오리지널"
-  quiz_rows = df_joined.Origin .== "퀴즈"
-  
-  orig_std = std(df_joined[orig_rows, :Score])
-  quiz_std = std(df_joined[quiz_rows, :Score])
-  
-  return orig_std, quiz_std
-end
-
-function calculate_student_origin_avg(
+function calculate_origin_stats(
     df_joined::DataFrame,
-    student_id::Int64
-)::Tuple{Float64, Float64}
-  student_rows = df_joined.IDs .== student_id
-  
-  orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
-  quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
-  
-  student_orig_avg = mean(df_joined[orig_rows, :Score])
-  student_quiz_avg = mean(df_joined[quiz_rows, :Score])
-  
-  return student_orig_avg, student_quiz_avg
-end
+    student_id::Union{Int64, Nothing} = nothing
+)::Dict{String, Float64}
+    # 전체 데이터에 대한 계산
+    total_orig_rows = df_joined.Origin .== "오리지널"
+    total_quiz_rows = df_joined.Origin .== "퀴즈"
+    
+    total_orig_avg = mean((df_joined[total_orig_rows, :Score]))
+    total_quiz_avg = mean((df_joined[total_quiz_rows, :Score]))
+    total_orig_std = std(df_joined[total_orig_rows, :Score])
+    total_quiz_std = std(df_joined[total_quiz_rows, :Score])
 
-function calculate_student_origin_std(
-    df_joined::DataFrame,
-    student_id::Int64
-)::Tuple{Float64, Float64}
-  student_rows = df_joined.IDs .== student_id
-  
-  orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
-  quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
-  
-  student_orig_std = std(df_joined[orig_rows, :Score])
-  student_quiz_std = std(df_joined[quiz_rows, :Score])
-  
-  return student_orig_std, student_quiz_std
+    result = Dict{String, Float64}(
+        "total_orig_avg" => total_orig_avg,
+        "total_quiz_avg" => total_quiz_avg,
+        "total_orig_std" => total_orig_std,
+        "total_quiz_std" => total_quiz_std
+    )
+
+    if student_id === nothing
+        result["student_orig_avg"] = NaN
+        result["student_quiz_avg"] = NaN
+        result["student_orig_std"] = NaN
+        result["student_quiz_std"] = NaN
+    else
+        # 특정 학생에 대한 계산
+        student_rows = df_joined.IDs .== student_id
+        student_orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
+        student_quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
+
+        student_orig_avg = mean(df_joined[student_orig_rows, :Score])
+        student_quiz_avg = mean(df_joined[student_quiz_rows, :Score])
+        student_orig_std = std(df_joined[student_orig_rows, :Score])
+        student_quiz_std = std(df_joined[student_quiz_rows, :Score])
+
+        result["student_orig_avg"] = student_orig_avg
+        result["student_quiz_avg"] = student_quiz_avg
+        result["student_orig_std"] = student_orig_std
+        result["student_quiz_std"] = student_quiz_std
+    end
+
+    return result
 end
 
 function plot_origination_bar_graph(data_dict::Dict{String, Real})
