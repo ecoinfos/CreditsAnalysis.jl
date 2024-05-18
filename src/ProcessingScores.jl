@@ -4,21 +4,32 @@ using CreditsAnalysis
 using DataFrames
 using CairoMakie
 
-export collect_results, count_correct_responses!, calculate_score_sums,
+export collect_results, convert_ox_to_scores!, calculate_score_sums,
        plot_histogram
 
 
 function collect_results(df::DataFrame, cat::String)::DataFrame
+  """
+  Collect row indices from a DataFrame where the DataGroups column contains
+  the specified category (`cat`). The resulting DataFrame contains only the
+  rows that match the specified category.
+  """
   row_indices = findall(row -> occursin(cat, row.DataGroups), eachrow(df))
   df_res = df[row_indices, :]
 
   return df_res
 end
 
-function count_correct_responses!(
+function convert_ox_to_scores!(
   df::DataFrame, col_prefix::String, old_new_pair::Dict{String, Int64}
 )::DataFrame
-
+  """
+  Find all columns in the DataFrame that start with the specified prefix after
+  duplication test. Then convert the values in each column to the new values
+  specified in the `old_new_pair` dictionary. The converted values are then
+  converted to Int64 types and summed up to calculate the total score for
+  each student.
+  """
   student_ids = df.IDs
   for i in eachindex(student_ids) 
     if student_ids[i] in student_ids[i+1:end]
