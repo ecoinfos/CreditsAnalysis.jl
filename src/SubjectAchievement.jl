@@ -6,8 +6,7 @@ using CairoMakie
 using Statistics
 
 export join_scores_with_subjects, calculate_total_subject_avgs,
-       calculate_student_subject_avgs, plot_achievement_radar,
-       calculate_origin_stats, plot_origination_bar_graph
+       calculate_student_subject_avgs, calculate_accuracy_from_origin
 
 
 function join_scores_with_subjects(
@@ -50,192 +49,53 @@ function calculate_student_subject_avgs(df_joined::DataFrame)::DataFrame
   return df_avg_scores_per_student
 end
 
-function plot_achievement_radar(
-  df_avg_scores_per_subject::DataFrame,
-  df_avg_scores_per_student::DataFrame,
-  student_id::Int64
-)
-  # Calculate total average per subject 
-  subjects_all = df_avg_scores_per_subject.Subjects
-  avg_scores_all = df_avg_scores_per_subject.AvgScore
-
-  student_data = filter(
-    row -> row.IDs == student_id, df_avg_scores_per_student
-  )
-  subjects_student = student_data.Subjects
-  avg_scores_student = student_data.AvgScore
-
-  fig = Figure(size=(800, 400))
-  ax = PolarAxis(
-    fig[1, 1],
-    title="핵심주제별 평균 비교: 전체 평균 vs. 학생 $student_id",
-    titlegap=30,
-    
-    # Theta ticks setting / thetatick length=ticks+1 
-    theta_0 = -pi/2,
-    direction = -1,
-    thetaticks = (range(0, 2pi, length=8)[1:end-1],subjects_all),
-    thetaticklabelsize=13,
-    
-    # Radius ticks setting
-    rticks=0:1:5,
-    rticklabelsize=10,
-    rticklabelcolor=:gray,
-
-    # Grid lines setting
-    rgridcolor=:gray,
-    thetagridcolor=:gray
-  )
-  rlims!(ax, 0.0, 5.3)
-
-  line1 = lines!(
-    ax,
-    range(0, 2π, length=length(subjects_all)+1),
-    vcat(avg_scores_all, avg_scores_all[1]),
-    color=:blue,
-    linewidth=2,
-    label="전체 평균"
-  )
-  line2 = lines!(
-    ax,
-    range(0, 2π, length=length(subjects_student)+1),
-    vcat(avg_scores_student, avg_scores_student[1]),
-    color=:red,
-    linewidth=2,
-    label="$student_id 학생 평균"
-  )
-
-  Legend(
-    fig[1,2],
-    [line1, line2],
-    ["전체 평균", "$student_id 학생 평균"],
-    labelsize=7,
-    backgroundcolor=(:white, 0.8)
-  ) 
-  fig
-
-end
 
 # SAA 2. Analysis of achievement on question origins
 
-function calculate_origin_stats(
-    df_joined::DataFrame,
-    student_id::Union{Int64, Nothing} = nothing
+function calculate_accuracy_from_origin(
+  df_joined::DataFrame,
+  student_id::Union{Int64, Nothing} = nothing
 )::Dict{String, Float64}
-    # 전체 데이터에 대한 계산
-    total_orig_rows = df_joined.Origin .== "오리지널"
-    total_quiz_rows = df_joined.Origin .== "퀴즈"
+
+  total_orig_rows = df_joined.Origin .== "오리지널"
+  total_quiz_rows = df_joined.Origin .== "퀴즈"
+  
+  total_orig_correct = count(df_joined[total_orig_rows, :Score] .!= 0)
+  total_quiz_correct = count(df_joined[total_quiz_rows, :Score] .!= 0)
+  
+  total_orig_total = count(total_orig_rows)
+  total_quiz_total = count(total_quiz_rows)
+  
+  total_orig_accuracy = total_orig_correct / total_orig_total * 100
+  total_quiz_accuracy = total_quiz_correct / total_quiz_total * 100
+  
+  result_dict = Dict{String, Float64}(
+    "total_orig_accuracy" => total_orig_accuracy,
+    "total_quiz_accuracy" => total_quiz_accuracy
+  )
+  
+  if student_id === nothing
+    result_dict["student_orig_accuracy"] = NaN
+    result_dict["student_quiz_accuracy"] = NaN
+  else
+    student_rows = df_joined.IDs .== student_id
+    student_orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
+    student_quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
     
-    total_orig_avg = mean((df_joined[total_orig_rows, :Score]))
-    total_quiz_avg = mean((df_joined[total_quiz_rows, :Score]))
-    total_orig_std = std(df_joined[total_orig_rows, :Score])
-    total_quiz_std = std(df_joined[total_quiz_rows, :Score])
-
-    result = Dict{String, Float64}(
-        "total_orig_avg" => total_orig_avg,
-        "total_quiz_avg" => total_quiz_avg,
-        "total_orig_std" => total_orig_std,
-        "total_quiz_std" => total_quiz_std
-    )
-
-    if student_id === nothing
-        result["student_orig_avg"] = NaN
-        result["student_quiz_avg"] = NaN
-        result["student_orig_std"] = NaN
-        result["student_quiz_std"] = NaN
-    else
-        # 특정 학생에 대한 계산
-        student_rows = df_joined.IDs .== student_id
-        student_orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
-        student_quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
-
-        student_orig_avg = mean(df_joined[student_orig_rows, :Score])
-        student_quiz_avg = mean(df_joined[student_quiz_rows, :Score])
-        student_orig_std = std(df_joined[student_orig_rows, :Score])
-        student_quiz_std = std(df_joined[student_quiz_rows, :Score])
-
-        result["student_orig_avg"] = student_orig_avg
-        result["student_quiz_avg"] = student_quiz_avg
-        result["student_orig_std"] = student_orig_std
-        result["student_quiz_std"] = student_quiz_std
-    end
-
-    return result
+    student_orig_correct = count(df_joined[student_orig_rows, :Score] .!= 0)
+    student_quiz_correct = count(df_joined[student_quiz_rows, :Score] .!= 0)
+    
+    student_orig_total = count(student_orig_rows)
+    student_quiz_total = count(student_quiz_rows)
+    
+    student_orig_accuracy = student_orig_correct / student_orig_total * 100
+    student_quiz_accuracy = student_quiz_correct / student_quiz_total * 100
+    
+    result_dict["student_orig_accuracy"] = student_orig_accuracy
+    result_dict["student_quiz_accuracy"] = student_quiz_accuracy
+  end
+  
+  return result_dict
 end
-
-function plot_origination_bar_graph(data_dict::Dict{String, Real})
-    categories = ["오리지널", "퀴즈"]
-    bar_labels = ["전체 평균", "학생 평균"]
-
-    fig = Figure(size = (600, 400))
-    ax = Axis(fig[1, 1], ylabel = "점수", xticks = (1:2, categories))
-
-    # Create total average bars
-    bars1 = barplot!(
-        ax,
-        1 .+ [-0.2, 0.2],
-        [data_dict["orig_avg"], data_dict["quiz_avg"]],
-        width = 0.35
-    )
-    errorbars!(
-        ax,
-        1 .+ [-0.2, 0.2],
-        [data_dict["orig_avg"], data_dict["quiz_avg"]],
-        [data_dict["orig_std"], data_dict["quiz_std"]],
-        whiskerwidth = 10
-    )
-
-    # Create student average bars
-    bars2 = barplot!(
-        ax,
-        2 .+ [-0.2, 0.2],
-        [data_dict["student_orig_avg"], data_dict["student_quiz_avg"]],
-        width = 0.35
-    )
-    errorbars!(
-        ax,
-        2 .+ [-0.2, 0.2],
-        [data_dict["student_orig_avg"], data_dict["student_quiz_avg"]],
-        [data_dict["student_orig_std"], data_dict["student_quiz_std"]],
-        whiskerwidth = 10
-    )
-
-    # Convert bars to iterable objects
-    bars1_iterable = [bars1[i] for i in 1:length(bars1)]
-    bars2_iterable = [bars2[i] for i in 1:length(bars2)]
-
-    # Add labels
-    for (bar, label) in zip(bars1_iterable, bar_labels)
-        text!(
-            ax,
-            "$(label)",
-            position = (bar.x[], bar.y[] + bar.height[] + 0.1),
-            align = (:center, :bottom),
-            textsize = 10
-        )
-    end
-    for (bar, label) in zip(bars2_iterable, bar_labels)
-        text!(
-            ax,
-            "$(label)",
-            position = (bar.x[], bar.y[] + bar.height[] + 0.1),
-            align = (:center, :bottom),
-            textsize = 10
-        )
-    end
-
-    ax.xticks = (1:2, categories)
-    ax.xticksize = 10
-    ax.yticksize = 10
-
-    fig[1, 2] = Legend(fig, ax, "평균", framevisible = false)
-
-    return fig
-end
-
-
-
-
-
 
 end
