@@ -2,14 +2,13 @@ module SubjectAchievement
 
 using DataFrames
 using CSV
-using CairoMakie
 using Statistics
 
-export join_scores_with_subjects, calculate_total_subject_avgs,
+export join_scores_with_target_col, calculate_total_subject_avgs,
        calculate_student_subject_avgs, calculate_accuracy_from_origin
 
 
-function join_scores_with_subjects(
+function join_scores_with_target_col(
   df_questions::DataFrame, df_anp_res::DataFrame, target_col::Symbol
 )::DataFrame
   df_questions_selected = select(df_questions, :QuestionIDs, target_col)
@@ -23,9 +22,6 @@ function join_scores_with_subjects(
 
   return df_joined
 end
-
-# Studuent Achievement Analysis (SAA)
-# SAA 1. Analysis of achievement on subjects
 
 function calculate_total_subject_avgs(df_joined::DataFrame)::DataFrame
   df_avg_scores_per_question = combine(
@@ -48,9 +44,6 @@ function calculate_student_subject_avgs(df_joined::DataFrame)::DataFrame
 
   return df_avg_scores_per_student
 end
-
-
-# SAA 2. Analysis of achievement on question origins
 
 function calculate_accuracy_from_origin(
   df_joined::DataFrame,
