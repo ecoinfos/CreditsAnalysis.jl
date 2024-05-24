@@ -4,7 +4,7 @@ module CreditsAnalysis
 include("LoadingScores.jl")
 include("PROC/OMRDataTransformer.jl")
 include("PROC/ProcessingScores.jl")
-include("SubjectAchievement.jl")
+include("PROC/SubjectAchievement.jl")
 include("UI/CreatePlots.jl")
 
 end
