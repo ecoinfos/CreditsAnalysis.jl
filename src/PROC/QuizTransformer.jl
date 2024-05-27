@@ -1,11 +1,13 @@
-module LoadingScores
+module QuizTransformer
 
 using CreditsAnalysis
 using DataFrames
 using CSV
+using Dates
 
 export read_csv_to_dataframe, read_multiple_csvs_to_dataframes, 
-       column_titles_comparison
+       column_titles_comparison, vcat_quiz_data, modify_quiz_df_col_titles,
+       convert_to_datetime
 
 function read_csv_to_dataframe(file_path::String)::DataFrame
   """
@@ -14,7 +16,7 @@ function read_csv_to_dataframe(file_path::String)::DataFrame
 
   ```julia
   test_csv1 = "test/test_csv1.csv"
-  read_cav_to_dataframe(test_csv1)
+  read_csv_to_dataframe(test_csv1)
   ```
   3×3 DataFrame
     Row │ SN     col1   col2
@@ -30,7 +32,13 @@ function read_csv_to_dataframe(file_path::String)::DataFrame
     error("Invalid file format. Expected CSV file, got $file_extension")
   end
 
-  return CSV.File(file_path, missingstring="") |> DataFrame
+  df = CSV.File(file_path, missingstring="", pool=false) |> DataFrame
+
+  for col in names(df) 
+    df[!, col] = coalesce.(df[!, col], missing, "")
+  end
+
+  return df
 end
 
 function read_multiple_csvs_to_dataframes(
@@ -63,8 +71,8 @@ function read_multiple_csvs_to_dataframes(
         error(
           "Duplicate dataframe found: CSV file number $i is the same as $key."
         )
-end
     end
+  end
 
     df_dict[df_name] = new_df
   end
@@ -74,8 +82,8 @@ end
 
 # dataframe structure test
 
-function column_titles_comparison(df_dict::Dict{String, DataFrame})
-  dfA_colnames = names(df_dict["dfA"])
+function column_titles_comparison(df_dict::Dict{Symbol, DataFrame})
+  dfA_colnames = names(df_dict[:dfA])
   for key in sort(collect(keys(df_dict)))[2:end]
     df_colnames = names(df_dict[key])
     if names(df_dict[key]) != dfA_colnames
@@ -89,5 +97,70 @@ function column_titles_comparison(df_dict::Dict{String, DataFrame})
     end
   end
 end
+
+function vcat_quiz_data(df_dict::Dict{Symbol, DataFrame})::DataFrame
+  """
+  Merges multiple DataFrames into a single DataFrame.
+  ```julia
+  df_dict = Dict(:dfA => dfA, :dfB => dfB)
+  df_quiz_vcat = vcat_quiz_data(df_dict)
+  ```
+  """
+  df_quiz_vcat = DataFrame()
+  df_names = sort(collect(keys(df_dict)))
+  for df_name in df_names 
+    df = df_dict[df_name] 
+    if isempty(df_quiz_vcat)
+      df_quiz_vcat = df
+    else
+      df_quiz_vcat = vcat(df_quiz_vcat, df)
+    end
+  end
+
+  return df_quiz_vcat
+end
+
+function modify_quiz_df_col_titles(df_quiz_vcat::DataFrame)::DataFrame
+  new_col_titles = [
+    :No,
+    :Weeks,
+    :Sessions,
+    :Depts,
+    :Classes,
+    :Names,
+    :IDs,
+    :Qtypes,
+    :Questions,
+    :Answers,
+    :Responses,
+    :Correctness,
+    :Scores,
+    :Qstart_t, 
+    :Qend_t,
+    :Time
+  ]
+  df_quiz_vcat = rename(df_quiz_vcat, new_col_titles)
+  df_quiz_vcat = select(df_quiz_vcat, Not(:Depts, :Qtypes))
+  df_quiz_vcat.Classes = convert.(String, df_quiz_vcat.Classes)
+  df_quiz_vcat.Names = convert.(String, df_quiz_vcat.Names)
+  #df_quiz_merge.Answers = convert.(String, df_merge.Answers)
+  #df_quiz_merge.Responses = convert.(String, df_merge.Responses)
+  df_quiz_vcat.Correctness = convert.(String, df_quiz_vcat.Correctness)
+  df_quiz_vcat.Qstart_t = convert.(String, df_quiz_vcat.Qstart_t)
+  df_quiz_vcat.Qend_t = convert.(String, df_quiz_vcat.Qend_t)
+  
+  return df_quiz_vcat
+end
+
+function convert_to_datetime(str::String)
+  if isempty(str)
+    return missing
+  end
+  
+  replaced_str = replace(str, "오전" => "AM", "오후" => "PM")
+  replaced_str = replace(replaced_str, r"(AM|PM) (\d{1,2}:\d{2}:\d{2})" => s"\2 \1")
+  return DateTime(replaced_str, dateformat"yyyy-mm-dd HH:MM:SS p")
+end
+
 
 end
