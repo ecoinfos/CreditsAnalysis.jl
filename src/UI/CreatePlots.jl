@@ -3,7 +3,8 @@ module CreatePlots
 using DataFrames
 using CairoMakie
  
-export plot_achievement_radar, plot_origin_accuracy
+export plot_achievement_radar, plot_origin_accuracy, plot_weekly_quiz_score,
+       plot_weekly_quiz_question_time
 
 function plot_achievement_radar(
   df_avg_scores_per_subject::DataFrame,
@@ -110,9 +111,141 @@ function plot_origin_accuracy(accuracy_dict::Dict{String, Float64}, student_id::
     return fig
 end
 
+function plot_weekly_quiz_score(df_quiz_weekly::DataFrame, student_id::Int64)
+  df_weekly_score_sums = combine(
+    groupby(df_quiz_weekly, [:Weeks, :IDs]), :Scores => sum => :WeeklyScores
+  )
+  student_df = filter(row -> row.IDs == student_id, df_weekly_score_sums)
 
+  fig = Figure(size = (800, 400))
+  ax = Axis(
+    fig[1, 1],
+    limits = (0.5, maximum(student_df.Weeks)+0.5, 0, 105),
+    xlabel = "Weeks",
+    yticks = 0:20:105,
+    yminorticksvisible = true,
+    yminorticks = IntervalsBetween(9),
+    yminorgridvisible = true,
+    yminorgridstyle = :dot,
+    yminorgridcolor = :gray90
+  )
 
+  boxplot!(
+    ax,
+    df_weekly_score_sums.Weeks,
+    df_weekly_score_sums.WeeklyScores,
+    whiskerwidth = 0.3,
+    width = 0.7,
+    color = :lightgray,
+    show_median = true,
+    range = 3,
+    label = "All students"
+  )
+  lines!(ax, student_df.Weeks, student_df.WeeklyScores)
+  scatter!(ax, student_df.Weeks, student_df.WeeklyScores, markersize=8)
 
+  axislegend(ax, position = :rt, show = true)
 
+  return fig
+end
+
+function plot_weekly_quiz_question_time(
+  dict_quiz_purposes::Dict, student_id::Int64
+)
+  fig = Figure(size = (800, 600))
+  ax1 = Axis(
+    fig[1, 1],
+    xlabel = "Weeks",
+    xticks = 0:1:maximum(dict_quiz_purposes["ua"].Weeks),
+    ylabel = "Average time (sec)",
+    yminorticksvisible = true,
+    yminorticks = IntervalsBetween(10),
+    yminorgridvisible = true,
+    yminorgridstyle = :dot,
+    yminorgridcolor = :gray90,
+    title = "Purpose: understanding"
+  )
+
+  ax2 = Axis(
+    fig[2, 1],
+    xlabel = "Weeks",
+    xticks = 0:1:maximum(dict_quiz_purposes["ea"].Weeks),
+    ylabel = "Average time (sec)",
+    yminorticksvisible = true,
+    yminorticks = IntervalsBetween(10),
+    yminorgridvisible = true,
+    yminorgridstyle = :dot,
+    yminorgridcolor = :gray90,
+    title = "Purpose: exploration"
+  )
+
+  box1 = boxplot!(
+    ax1,
+    dict_quiz_purposes["ua"].Weeks,
+    dict_quiz_purposes["ua"].AvgTime,
+    show_outliers = false,
+    color = :lightgray,
+    gap = 0.5
+  )
+
+  box2 = boxplot!(
+    ax2,
+    dict_quiz_purposes["ea"].Weeks,
+    dict_quiz_purposes["ea"].AvgTime,
+    show_outliers = false,
+    color = :lightgray,
+    gap = 0.5
+  )
+
+  line1 = lines!(
+    ax1,
+    dict_quiz_purposes["us"].Weeks,
+    dict_quiz_purposes["us"].AvgTime,
+    color = :red,
+    label = "Student ID: $student_id"
+  )
+
+  scatter!(
+    ax1,
+    dict_quiz_purposes["us"].Weeks,
+    dict_quiz_purposes["us"].AvgTime,
+    color = :red,
+    markersize =10 
+  )
+
+  line2 = lines!(
+    ax2,
+    dict_quiz_purposes["es"].Weeks,
+    dict_quiz_purposes["es"].AvgTime,
+    color = :red,
+    label = "Student ID: $student_id"
+  )
+
+  scatter!(
+    ax2,
+    dict_quiz_purposes["es"].Weeks,
+    dict_quiz_purposes["es"].AvgTime,
+    color = :red,
+    markersize = 10 
+  )
+
+  Legend(
+    fig[1, 2],
+    [box1, line1],
+    ["Total students", "Student ID: $student_id"],
+    labelsize = 10,
+    backgroundcolor=(:white, 0.8)
+  )
+
+  Legend(
+    fig[2, 2],
+    [box2, line2],
+    ["Total students", "Student ID: $student_id"],
+    labelsize = 10,
+    backgroundcolor=(:white, 0.8)
+  )
+
+  display(fig)
+end
 
 end
