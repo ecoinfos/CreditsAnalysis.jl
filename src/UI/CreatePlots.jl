@@ -245,7 +245,7 @@ function plot_weekly_quiz_question_time(
     backgroundcolor=(:white, 0.8)
   )
 
-  display(fig)
+  return fig
 end
 
 end
