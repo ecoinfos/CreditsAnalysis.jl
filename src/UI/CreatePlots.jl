@@ -130,7 +130,7 @@ function plot_weekly_quiz_score(df_quiz_weekly::DataFrame, student_id::Int64)
     yminorgridcolor = :gray90
   )
 
-  boxplot!(
+  box = boxplot!(
     ax,
     df_weekly_score_sums.Weeks,
     df_weekly_score_sums.WeeklyScores,
@@ -141,10 +141,18 @@ function plot_weekly_quiz_score(df_quiz_weekly::DataFrame, student_id::Int64)
     range = 3,
     label = "All students"
   )
-  lines!(ax, student_df.Weeks, student_df.WeeklyScores)
-  scatter!(ax, student_df.Weeks, student_df.WeeklyScores, markersize=8)
+  line = lines!(ax, student_df.Weeks, student_df.WeeklyScores, color = :red)
+  scatter!(
+    ax, student_df.Weeks, student_df.WeeklyScores, markersize=8, color = :red
+  )
 
-  axislegend(ax, position = :rt, show = true)
+  Legend(
+    fig[1, 2],
+    [box, line],
+    ["Total students", "Student ID: $student_id"],
+    labelsize = 10,
+    backgroundcolor=(:white, 0.8)
+  )
 
   return fig
 end
