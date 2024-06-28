@@ -7,7 +7,9 @@ using Dates
 
 export read_csv_to_dataframe, read_multiple_csvs_to_dataframes, 
        column_titles_comparison, vcat_quiz_data, modify_quiz_df_col_titles,
-       convert_to_datetime
+       convert_to_datetime, read_multiple_access_csvs_to_dict
+
+# 1. Quiz performance data transformer
 
 function read_csv_to_dataframe(file_path::String)::DataFrame
   """
@@ -162,5 +164,57 @@ function convert_to_datetime(str::String)
   return DateTime(replaced_str, dateformat"yyyy-mm-dd HH:MM:SS p")
 end
 
+# 2. Quiz access data transformer
+function read_multiple_access_csvs_to_dict(
+  access_data_paths::Vector{String},
+  class::String,
+  start_week::Int64,
+)::Dict{Symbol, DataFrame}
+
+  num_dfs = length(access_data_paths)
+  df_dict = Dict{Symbol, DataFrame}()
+
+  for i in 1:num_dfs
+    df_name = Symbol("df_" * class * "W" * string(start_week + i - 1))
+    new_df = read_csv_to_dataframe(access_data_paths[i])
+
+    for (key, existing_df) in df_dict 
+      if isequal(existing_df, new_df)
+        error("Duplicate dataframe found")
+      end
+    end
+    
+    df_dict[df_name] = new_df 
+  end
+
+  return df_dict
+end
+
+function modify_quiz_access_df_col_titles(df_quiz_vcat::DataFrame)::DataFrame
+  new_col_titles = [
+    :No,
+    :Classes,
+    :Weeks,
+    :Depts,
+    :Names,
+    :IDs,
+    :Access_t,
+    :Compeleted_t,
+    :Duration,
+    :Status,
+    :Scores
+  ]
+  df_quiz_vcat = rename(df_quiz_vcat, new_col_titles)
+  df_quiz_vcat = select(df_quiz_vcat, Not(:Depts, :Qtypes))
+  df_quiz_vcat.Classes = convert.(String, df_quiz_vcat.Classes)
+  df_quiz_vcat.Names = convert.(String, df_quiz_vcat.Names)
+  #df_quiz_merge.Answers = convert.(String, df_merge.Answers)
+  #df_quiz_merge.Responses = convert.(String, df_merge.Responses)
+  df_quiz_vcat.Correctness = convert.(String, df_quiz_vcat.Correctness)
+  df_quiz_vcat.Qstart_t = convert.(String, df_quiz_vcat.Qstart_t)
+  df_quiz_vcat.Qend_t = convert.(String, df_quiz_vcat.Qend_t)
+  
+  return df_quiz_vcat
+end
 
 end
