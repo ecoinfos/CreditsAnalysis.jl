@@ -1,4 +1,4 @@
-module OMRDataTransformer
+module LoadOMR
 
 using CSV
 using DataFrames
