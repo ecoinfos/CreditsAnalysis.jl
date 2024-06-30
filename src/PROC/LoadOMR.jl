@@ -7,7 +7,10 @@ using ShiftedArrays
 export load_exam_data, make_questions_colnames_vector,
        transform_omr_data, replace_missings_from_df, convert_column_types,
        remove_unnecessary_columns, remove_unnecessary_marks,
-       find_missing_rows_dict
+       find_missing_rows_dict, collect_results, convert_ox_to_scores!,
+       calculate_score_sums
+
+# 1. Load OMR data from csvs and prepare data dictionary
 
 function load_exam_data(file_path::String)::DataFrame
   """
@@ -174,5 +177,60 @@ function find_missing_rows_dict(df::DataFrame)
 
   return missing_rows
 end
+
+
+# 2. Calculate scores from OMR data
+
+function collect_results(df::DataFrame, cat::String)::DataFrame
+  """
+  Collect row indices from a DataFrame where the DataGroups column contains
+  the specified category (`cat`). The resulting DataFrame contains only the
+  rows that match the specified category.
+  """
+  row_indices = findall(row -> occursin(cat, row.DataGroups), eachrow(df))
+  df_res = df[row_indices, :]
+
+  return df_res
+end
+
+function convert_ox_to_scores!(
+  df::DataFrame, col_prefix::String, old_new_pair::Dict{String, Int64}
+)::DataFrame
+  """
+  Find all columns in the DataFrame that start with the specified prefix after
+  duplication test. Then convert the values in each column to the new values
+  specified in the `old_new_pair` dictionary. The converted values are then
+  converted to Int64 types. 
+  """
+  student_ids = df.IDs
+  for i in eachindex(student_ids) 
+    if student_ids[i] in student_ids[i+1:end]
+      error("Duplicate ID found")
+    end
+  end
+
+  cols = filter(col -> startswith(col, col_prefix), names(df))
+  for col in cols 
+    df[!, col] = map(x -> get(old_new_pair, x, x), df[!, col])
+    df[!, col] = convert.(Int64, df[!, col])
+  end
+
+  return df
+end
+
+function calculate_score_sums(df::DataFrame, col_prefix::String)::DataFrame
+  """
+  Calculate the sum of all columns in the DataFrame that start with the
+  specified prefix. The resulting sum is stored in a new column called
+  `ScoreSums`.
+  """
+  cols = filter(col -> startswith(col, col_prefix), names(df)) 
+  df[!, :ScoreSums] = sum(eachcol(df[!, cols]))
+
+  return df
+end
+
+
+
 
 end
