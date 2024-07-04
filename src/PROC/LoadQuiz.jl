@@ -9,7 +9,7 @@ export read_csv_to_dataframe, read_multiple_csvs_to_dataframes,
        column_titles_comparison, vcat_quiz_data, modify_quiz_df_col_titles,
        convert_to_datetime, read_multiple_access_csvs_to_dict
 
-# 1. Quiz performance data transformer
+# 1. Load and transform quiz score data
 
 function read_csv_to_dataframe(file_path::String)::DataFrame
   """
@@ -164,7 +164,7 @@ function convert_to_datetime(str::String)
   return DateTime(replaced_str, dateformat"yyyy-mm-dd HH:MM:SS p")
 end
 
-# 2. Quiz access data transformer
+# 2. Load and transform quiz access data
 function read_multiple_access_csvs_to_dict(
   access_data_paths::Vector{String},
   class::String,
