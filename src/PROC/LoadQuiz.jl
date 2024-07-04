@@ -1,4 +1,4 @@
-module QuizTransformer
+module LoadQuiz
 
 using CreditsAnalysis
 using DataFrames

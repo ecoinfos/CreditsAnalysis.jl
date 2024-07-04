@@ -1,4 +1,4 @@
-module SubjectAchievement
+module TopicStats
 
 using DataFrames
 using CSV
@@ -23,7 +23,7 @@ function join_scores_with_target_col(
   return df_joined
 end
 
-function calculate_total_subject_avgs(df_joined::dataframe)::dataframe
+function calculate_total_subject_avgs(df_joined::DataFrame)::DataFrame
   df_avg_scores_per_question = combine(
     groupby(df_joined, [:Subjects, :QuestionIDs]), :Score => mean => :AvgScore
   )
