@@ -110,12 +110,16 @@ function vcat_quiz_data(df_dict::Dict{Symbol,DataFrame})::DataFrame
   """
   df_quiz_vcat = DataFrame()
   df_names = sort(collect(keys(df_dict)))
+
   for df_name in df_names
     df = df_dict[df_name]
+
+    df_with_key = insertcols(df, :classes => fill(df_name, nrow(df)))
+
     if isempty(df_quiz_vcat)
-      df_quiz_vcat = df
+      df_quiz_vcat = df_with_key
     else
-      df_quiz_vcat = vcat(df_quiz_vcat, df)
+      df_quiz_vcat = vcat(df_quiz_vcat, df_with_key)
     end
   end
 
