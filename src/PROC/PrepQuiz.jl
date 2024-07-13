@@ -6,18 +6,27 @@ using Statistics
 using Dates
 
 export create_quiz_analysis_df, create_quiz_question_time_dict,
+       clean_df_quiz_access, 
        quiz_start_t_diff, quiz_duration
 
 # Quiz performace preparation
 
-function create_quiz_analysis_df(objective_data::String, df_quiz_weekly::DataFrame) 
+function create_quiz_analysis_df(
+  objective_data::String, df_quiz_weekly::DataFrame
+)::DataFrame 
+
   df_quiz_objectives = CSV.read(objective_data, DataFrame)
-  df_quiz_joined = leftjoin(df_quiz_weekly, df_quiz_objectives, makeunique = true, on=:Questions)
+  df_quiz_joined = leftjoin(
+    df_quiz_weekly, df_quiz_objectives, makeunique = true, on=:Questions
+  )
 
   return df_quiz_joined
 end
 
-function create_quiz_question_time_dict(df_quiz_joined::DataFrame, student_id::Int64)
+function create_quiz_question_time_dict(
+  df_quiz_joined::DataFrame, student_id::Int64
+)::Dict{String, DataFrame}
+  
   # Filter quiz data by `Purposes` data 
   df_understanding = filter(row -> row.Purposes == "이해", df_quiz_joined)
   df_exploration = filter(row -> row.Purposes == "탐색", df_quiz_joined)
@@ -47,16 +56,26 @@ end
 
 # Quiz access preparation
 
-function quiz_start_t_diff(df_quiz_access::DataFrame, df_Wstart_t::DataFrame)
+function clean_df_quiz_access(
+  df_quiz_access::DataFrame, missing_cols::Vector{Symbol}
+)::DataFrame
+
+  df_clean = dropmissing(df_quiz_access, missing_cols)
+
+  return df_clean
+end
+
+function quiz_start_t_diff(
+  df_clean::DataFrame, df_Wstart_t::DataFrame
+)::DataFrame
 
   df_Wstart_t.Wstart_t = DateTime.(df_Wstart_t.Wstart_t)
-  df_merged = leftjoin(df_quiz_access, df_Wstart_t, on=:Weeks)
-  df_clean = dropmissing(df_merged, [:Weeks, :Qstart_t, :Wstart_t])
-  df_clean.time_diff = map(df_clean.Qstart_t, df_clean.Wstart_t) do qstart, wstart
+  df_merged = leftjoin(df_clean, df_Wstart_t, on=:Weeks)
+  df_merged.time_diff = map(df_merged.Qstart_t, df_merged.Wstart_t) do qstart, wstart
     return (Dates.value(qstart) - Dates.value(wstart)) / 1000 / 3600 / 24
   end
 
-  gdf = groupby(df_clean, :Weeks)
+  gdf = groupby(df_merged, :Weeks)
 
   df_start_t_diff = combine(
     gdf,
@@ -65,15 +84,13 @@ function quiz_start_t_diff(df_quiz_access::DataFrame, df_Wstart_t::DataFrame)
     :time_diff => std => :std_days,
     nrow => :count
   )
-
   sort!(df_start_t_diff, :Weeks)
 
   return df_start_t_diff 
 end
 
-function quiz_duration(df_quiz_access::DataFrame)
+function quiz_duration(df_clean::DataFrame)::DataFrame
 
-  df_clean = dropmissing(df_quiz_access, [:Weeks, :Qstart_t])
   gdf = groupby(df_clean, :Weeks)
 
   df_duration = combine(
