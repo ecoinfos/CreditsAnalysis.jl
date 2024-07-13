@@ -3,8 +3,11 @@ module PrepQuiz
 using CSV
 using DataFrames
 using Statistics
+using Dates
 
 export create_quiz_analysis_df, create_quiz_question_time_dict
+
+# Quiz performace preparation
 
 function create_quiz_analysis_df(objective_data::String, df_quiz_weekly::DataFrame) 
   df_quiz_objectives = CSV.read(objective_data, DataFrame)
@@ -39,6 +42,31 @@ function create_quiz_question_time_dict(df_quiz_joined::DataFrame, student_id::I
   )
 
   return dict_quiz_purposes
+end
+
+# Quiz access preparation
+
+function quiz_start_t(df_quiz_access::DataFrame, df_Wstart_t::DataFrame)
+
+  df_Wstart_t.Wstart_t = DateTime.(df_Wstart_t.Wstart_t)
+  df_merged = leftjoin(df_quiz_access, df_Wstart_t, on=:Weeks)
+  df_clean = dropmissing(df_merged, [:Weeks, :Qstart_t, :Wstart_t])
+  df_clean.time_diff = map(df_clean.Qstart_t, df_clean.Wstart_t) do qstart, wstart
+    return (Dates.value(qstart) - Dates.value(wstart)) / 1000 / 3600 / 24
+  end
+
+  gdf = groupby(df_clean, :Weeks)
+
+  df_start_t_diff = combine(
+    gdf,
+    :time_diff => mean => :mean_days,
+    :time_diff => std => :std_days,
+    nrow => :count
+  )
+
+  sort!(df_start_t_diff, :Weeks)
+
+  return df_start_t_diff 
 end
 
 end
