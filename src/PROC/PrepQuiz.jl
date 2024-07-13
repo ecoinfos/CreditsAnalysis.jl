@@ -6,7 +6,7 @@ using Statistics
 using Dates
 
 export create_quiz_analysis_df, create_quiz_question_time_dict,
-       quiz_start_t_diff
+       quiz_start_t_diff, quiz_duration
 
 # Quiz performace preparation
 
@@ -69,6 +69,24 @@ function quiz_start_t_diff(df_quiz_access::DataFrame, df_Wstart_t::DataFrame)
   sort!(df_start_t_diff, :Weeks)
 
   return df_start_t_diff 
+end
+
+function quiz_duration(df_quiz_access::DataFrame)
+
+  df_clean = dropmissing(df_quiz_access, [:Weeks, :Qstart_t])
+  gdf = groupby(df_clean, :Weeks)
+
+  df_duration = combine(
+    gdf,
+    :Duration => mean => :mean_durations,
+    :Duration => median => :median_durations,
+    :Duration => std => :std_durations,
+    nrow => :count
+  )
+
+  sort!(df_duration, :Weeks)
+
+  return df_duration 
 end
 
 end
