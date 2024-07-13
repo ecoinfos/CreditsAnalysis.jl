@@ -5,7 +5,8 @@ using DataFrames
 using Statistics
 using Dates
 
-export create_quiz_analysis_df, create_quiz_question_time_dict
+export create_quiz_analysis_df, create_quiz_question_time_dict,
+       quiz_start_t_diff
 
 # Quiz performace preparation
 
@@ -46,7 +47,7 @@ end
 
 # Quiz access preparation
 
-function quiz_start_t(df_quiz_access::DataFrame, df_Wstart_t::DataFrame)
+function quiz_start_t_diff(df_quiz_access::DataFrame, df_Wstart_t::DataFrame)
 
   df_Wstart_t.Wstart_t = DateTime.(df_Wstart_t.Wstart_t)
   df_merged = leftjoin(df_quiz_access, df_Wstart_t, on=:Weeks)
@@ -60,6 +61,7 @@ function quiz_start_t(df_quiz_access::DataFrame, df_Wstart_t::DataFrame)
   df_start_t_diff = combine(
     gdf,
     :time_diff => mean => :mean_days,
+    :time_diff => median => :median_days,
     :time_diff => std => :std_days,
     nrow => :count
   )
