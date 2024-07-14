@@ -123,7 +123,7 @@ function create_quiz_access_student_df(
   end
   
   sort!(student_df, :IDs)
-  student_df = student_df[!, vcat(:IDs, :Weeks, :access_time_diff, :Duration)]
+  student_df = student_df[!, vcat(:IDs, :Weeks, :access_time_diff, :Duration, :Scores)]
 
   return student_df
 end
