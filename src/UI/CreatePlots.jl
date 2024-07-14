@@ -4,7 +4,8 @@ using DataFrames
 using CairoMakie
  
 export plot_achievement_radar, plot_origin_accuracy, plot_weekly_quiz_score,
-       plot_weekly_quiz_question_time, plot_quiz_access_time
+       plot_weekly_quiz_question_time, plot_quiz_access_time,
+       plot_quiz_duration
 
 function plot_achievement_radar(
   df_avg_scores_per_subject::DataFrame,
@@ -319,6 +320,77 @@ function plot_quiz_access_time(
     fig[1, 2],
     [avg_line, student_line, score_line],
     ["Average Access Time", "Student Access Time", "Scores"],
+    labelsize = 10,
+    backgroundcolor = (:white, 0.8)
+  )
+  
+  return fig
+end
+
+function plot_quiz_duration(
+  df_quiz_duration::DataFrame,
+  student_df::DataFrame,
+  id::Int64
+)
+
+  fig = Figure(size = (1000, 600))
+  ax1 = Axis(
+    fig[1, 1], 
+    title = "Weekly time spent on quiz (Student ID: $id)",
+    xlabel = "Weeks",
+    ylabel = "Duration (mins)",
+    xticks = 1:14,
+    limits = (0.6, 14.4, 0, 120),
+  )
+  
+  ax2 = Axis(
+    fig[1, 1],
+    ylabel = "Quiz Scores",
+    yaxisposition = :right,
+    ygridvisible = false,
+    limits = (0.6, 14.4, 0, 105)
+  )
+  hidespines!(ax2)
+  hidexdecorations!(ax2)
+  
+  linkxaxes!(ax1, ax2)
+  
+  # Plot average data
+  x_avg = df_quiz_duration[!, :Weeks]
+  y_avg = df_quiz_duration[!, :mean_durations]
+  error = df_quiz_duration[!, :std_durations]
+  band!(ax1, x_avg, y_avg .- error, y_avg .+ error, color = (:lightgray, 0.5))
+  avg_line = lines!(ax1, x_avg, y_avg, color = :red, linewidth = 2)
+  scatter!(ax1, x_avg, y_avg, color = :red, markersize = 10)
+  
+  # Plot student data
+  student_data = filter(row -> row.IDs == id, student_df)
+  x_student = student_data[!, :Weeks]
+  y_student_duration = student_data[!, :Duration]
+  y_student_score = student_data[!, :Scores]
+  
+  student_line = lines!(
+    ax1,
+    x_student,
+    y_student_duration,
+    color = :blue,
+    linewidth = 2
+  )
+  scatter!(ax1, x_student, y_student_duration, color = :blue, markersize = 10)
+  
+  score_line = lines!(
+    ax2,
+    x_student,
+    y_student_score,
+    color = :green,
+    linewidth = 2
+  )
+  scatter!(ax2, x_student, y_student_score, color = :green, markersize = 10)
+  
+  Legend(
+    fig[1, 2],
+    [avg_line, student_line, score_line],
+    ["Average Duration", "Student Duration", "Scores"],
     labelsize = 10,
     backgroundcolor = (:white, 0.8)
   )
