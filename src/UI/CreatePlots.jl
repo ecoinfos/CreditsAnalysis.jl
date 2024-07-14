@@ -262,43 +262,68 @@ function plot_quiz_access_time(
   id::Int64
 )
 
-  fig = Figure(size = (800, 600))
-  ax = Axis(
+  fig = Figure(size = (1000, 600))
+  ax1 = Axis(
     fig[1, 1], 
-    title = "Days to quiz access from release date",
+    title = "Quiz Access Time and Scores (Student ID: $id)",
     xlabel = "Weeks",
     ylabel = "Days to quiz access",
     xticks = 1:14,
     limits = (0.6, 14.4, 0, 5),
   )
   
+  ax2 = Axis(
+    fig[1, 1],
+    ylabel = "Quiz Scores",
+    yaxisposition = :right,
+    ygridvisible = false
+  )
+  hidespines!(ax2)
+  hidexdecorations!(ax2)
+  
+  linkxaxes!(ax1, ax2)
+  
   # Plot average data
   x_avg = df_Qstart_t_diff[!, :Weeks]
   y_avg = df_Qstart_t_diff[!, :mean_days]
   error = df_Qstart_t_diff[!, :std_days]
-
-  band!(ax, x_avg, y_avg .- error, y_avg .+ error, color = :lightgray)
-  lines!(ax, x_avg, y_avg, color = :red, linewidth = 2, label = "Average")
-  scatter!(ax, x_avg, y_avg, color = :red, markersize = 10)
-
+  band!(ax1, x_avg, y_avg .- error, y_avg .+ error, color = (:lightgray, 0.5))
+  avg_line = lines!(ax1, x_avg, y_avg, color = :red, linewidth = 2)
+  scatter!(ax1, x_avg, y_avg, color = :red, markersize = 10)
+  
   # Plot student data
   student_data = filter(row -> row.IDs == id, student_df)
   x_student = student_data[!, :Weeks]
-  y_student = student_data[!, :access_time_diff]
-
-  lines!(ax, x_student, y_student, color = :blue, linewidth = 2, label = "Student")
-  scatter!(ax, x_student, y_student, color = :blue, markersize = 10)
-
+  y_student_diff = student_data[!, :access_time_diff]
+  y_student_score = student_data[!, :Scores]
+  
+  student_line = lines!(
+    ax1,
+    x_student,
+    y_student_diff,
+    color = :blue,
+    linewidth = 2
+  )
+  scatter!(ax1, x_student, y_student_diff, color = :blue, markersize = 10)
+  
+  score_line = lines!(
+    ax2,
+    x_student,
+    y_student_score,
+    color = :green,
+    linewidth = 2
+  )
+  scatter!(ax2, x_student, y_student_score, color = :green, markersize = 10)
+  
   Legend(
     fig[1, 2],
-    ax,
-    "Data",
+    [avg_line, student_line, score_line],
+    ["Average Access Time", "Student Access Time", "Scores"],
     labelsize = 10,
     backgroundcolor = (:white, 0.8)
   )
-
+  
   return fig
 end
-
 
 end
