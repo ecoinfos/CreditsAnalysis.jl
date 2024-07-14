@@ -4,7 +4,7 @@ using DataFrames
 using CairoMakie
  
 export plot_achievement_radar, plot_origin_accuracy, plot_weekly_quiz_score,
-       plot_weekly_quiz_question_time
+       plot_weekly_quiz_question_time, plot_quiz_access_time
 
 function plot_achievement_radar(
   df_avg_scores_per_subject::DataFrame,
@@ -255,5 +255,50 @@ function plot_weekly_quiz_question_time(
 
   return fig
 end
+
+function plot_quiz_access_time(
+  df_Qstart_t_diff::DataFrame,
+  student_df::DataFrame,
+  id::Int64
+)
+
+  fig = Figure(size = (800, 600))
+  ax = Axis(
+    fig[1, 1], 
+    title = "Days to quiz access from release date",
+    xlabel = "Weeks",
+    ylabel = "Days to quiz access",
+    xticks = 1:14,
+    limits = (0.6, 14.4, 0, 5),
+  )
+  
+  # Plot average data
+  x_avg = df_Qstart_t_diff[!, :Weeks]
+  y_avg = df_Qstart_t_diff[!, :mean_days]
+  error = df_Qstart_t_diff[!, :std_days]
+
+  band!(ax, x_avg, y_avg .- error, y_avg .+ error, color = :lightgray)
+  lines!(ax, x_avg, y_avg, color = :red, linewidth = 2, label = "Average")
+  scatter!(ax, x_avg, y_avg, color = :red, markersize = 10)
+
+  # Plot student data
+  student_data = filter(row -> row.IDs == id, student_df)
+  x_student = student_data[!, :Weeks]
+  y_student = student_data[!, :access_time_diff]
+
+  lines!(ax, x_student, y_student, color = :blue, linewidth = 2, label = "Student")
+  scatter!(ax, x_student, y_student, color = :blue, markersize = 10)
+
+  Legend(
+    fig[1, 2],
+    ax,
+    "Data",
+    labelsize = 10,
+    backgroundcolor = (:white, 0.8)
+  )
+
+  return fig
+end
+
 
 end
