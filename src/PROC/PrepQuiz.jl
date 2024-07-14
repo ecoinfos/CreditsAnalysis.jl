@@ -6,7 +6,7 @@ using Statistics
 using Dates
 
 export create_quiz_analysis_df, create_quiz_question_time_dict,
-       clean_df_quiz_access, 
+       clean_df_quiz_access, create_quiz_access_student_df, 
        quiz_start_t_diff, quiz_duration
 
 # Quiz performace preparation
@@ -105,5 +105,28 @@ function quiz_duration(df_clean::DataFrame)::DataFrame
 
   return df_duration 
 end
+
+function create_quiz_access_student_df(
+  df_quiz_access::DataFrame,
+  df_Wstart_t::DataFrame,
+  student_ids::Vector{Int64}
+)::DataFrame
+
+  df = filter(row -> row.IDs in student_ids, df_quiz_access)
+
+  df_Wstart_t.Wstart_t = DateTime.(df_Wstart_t.Wstart_t)
+  student_df = leftjoin(df, df_Wstart_t, on=:Weeks)
+  student_df.access_time_diff = map(
+    student_df.Qstart_t, student_df.Wstart_t
+  ) do qstart, wstart
+    return (Dates.value(qstart) - Dates.value(wstart)) / 1000 / 3600 / 24
+  end
+  
+  sort!(student_df, :IDs)
+  student_df = student_df[!, vcat(:IDs, :Weeks, :access_time_diff, :Duration)]
+
+  return student_df
+end
+
 
 end
