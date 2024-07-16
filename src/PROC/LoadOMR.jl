@@ -17,8 +17,21 @@ function load_exam_data(file_path::String)::DataFrame
   Load examination score data file saved in CSV format. The data is from
   an Optical Mark Recognition (OMR) sheet. Make sure that the data in xls
   format should be converted to CSV format before loading it.
+
+  ```julia
+  file_path_correct_csv = "./test/test_csv1.csv"
+  load_exam_data(file_path_correct_csv)
+  ```
+  3×3 DataFrame
+  Row │ SN     col1   col2
+      │ Int64  Int64  Int64
+  ────┼─────────────────────
+    1 │     1      1      1
+    2 │     2      2      2
+    3 │     3      3      3
   """
 
+  df = DataFrame()
   try
     df = CSV.read(file_path, DataFrame, missingstring="")
     return df 
@@ -39,6 +52,15 @@ function make_questions_colnames_vector(no_questions::Int64)::Vector{Symbol}
   Create a vector of symbols for the questions columns in the transformed
   data frame. The number of questions is used to determine the number of
   columns for questions in the transformed data frame.
+
+  ```julia
+  no_questions = 3 
+  make_questions_colnames_vector(no_questions)
+  ```
+  3-element Vector{Symbol}:
+  :Q001
+  :Q002
+  :Q003
   """
 
   new_questions_colnames = Vector{Symbol}(undef, no_questions)
@@ -55,7 +77,6 @@ function make_questions_colnames_vector(no_questions::Int64)::Vector{Symbol}
 
   return new_questions_colnames
 end
-
 
 function transform_omr_data(
   df:: DataFrame, no_questions::Int64, new_questions_colnames::Vector{Symbol}
