@@ -1,7 +1,7 @@
 using DataFrames
 using Test
 
-import CreditsAnalysis.ProcessingScores as PS
+import CreditsAnalysis.LoadOMR as LO
 
 
 # OX into scores
@@ -17,7 +17,7 @@ import CreditsAnalysis.ProcessingScores as PS
     Q2 = ["1", "1", "O", "2", "2", "O"]
   )
 
-  df_res = PS.collect_results(df, "RES")
+  df_res = LO.collect_results(df, "RES")
   df_length = length(df[!, 1])
   @test length(df_res[!, 1]) == Int(df_length / 3)
   @test unique(df_res.DataGroups) == ["RES"]
@@ -33,7 +33,7 @@ end
     Q1 = ["O", "X"],
     Q2 = ["O", "O"]
   )
-  df1_res = PS.convert_ox_to_scores!(df1, "Q", Dict("O"=>5, "X"=>0))
+  df1_res = LO.convert_ox_to_scores!(df1, "Q", Dict("O"=>5, "X"=>0))
   @test eltype(df1_res.Q1) == Int64
   @test eltype(df1_res.Q2) == Int64
   @test unique(df1_res.Q1) == [5, 0]
@@ -46,7 +46,7 @@ end
     Q1 = ["O", "X"],
     Q2 = ["O", "O"]
   )
-  @test_throws ErrorException PS.convert_ox_to_scores!(
+  @test_throws ErrorException LO.convert_ox_to_scores!(
     df2, "Q", Dict("O"=>5, "X"=>0)
   )
 end
