@@ -20,19 +20,35 @@ import CreditsAnalysis.LoadOMR as LO
 end
 
 @testset "Questions column titles generation test" begin
-  no_questions1 = 10
-  test_colnames_vector1 = LO.make_questions_colnames_vector(no_questions1)
-  @test typeof(test_colnames_vector1) == Vector{Symbol}
-  @test length(test_colnames_vector1) == no_questions1
-  symbol_lengths1 = length.(string.(test_colnames_vector1))
-  @test std(symbol_lengths1) == 0.0
+  function check_symbol_format(sym::Symbol)
+    str = string(sym)
+    return occursin(r"^Q\d{3}$", str)
+  end
 
-  no_questions2 = 100
-  test_colnames_vector2 = LO.make_questions_colnames_vector(no_questions2)
-  @test typeof(test_colnames_vector2) == Vector{Symbol}
-  @test length(test_colnames_vector2) == no_questions2
-  symbol_lengths2 = length.(string.(test_colnames_vector2))
-  @test std(symbol_lengths2) == 0.0
+  #test the function of symbol structure check
+  test_vec1 = [:Q0001]
+  @test all(check_symbol_format, test_vec1) == false
+  test_vec2 = [:Q001, :Q0002]
+  @test all(check_symbol_format, test_vec2) == false
+  test_vec3 = [:Q001, :Q002, :Q003]
+  @test all(check_symbol_format, test_vec3) == true
+
+  test_no_q1 = 3 
+  test_vec_res1 = LO.make_questions_colnames_vector(test_no_q1)
+  @test typeof(test_vec_res1) == Vector{Symbol}
+  @test length(test_vec_res1) == 3
+  @test all(check_symbol_format, test_vec_res1) == true
+  
+  test_no_q2 = 10
+  test_vec_res2 = LO.make_questions_colnames_vector(test_no_q2)
+  @test all(check_symbol_format, test_vec_res2) == true
+
+  test_no_q3 = 1000
+  test_vec_res3 = LO.make_questions_colnames_vector(test_no_q3)
+  @test all(check_symbol_format, test_vec_res3) == false
+
+  test_no_q4 = 3.1
+  @test_throws MethodError LO.make_questions_colnames_vector(test_no_q4)
 end
 
 # OX into scores
@@ -80,4 +96,7 @@ end
   @test_throws ErrorException LO.convert_ox_to_scores!(
     df2, "Q", Dict("O"=>5, "X"=>0)
   )
+end
+
+@testset "question column creation test" begin
 end
