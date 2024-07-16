@@ -1,2 +1,2 @@
 include("TestLoadingScores.jl")
-include("TestOMRDataTransformer.jl")
+include("TestLoadOMR.jl")
