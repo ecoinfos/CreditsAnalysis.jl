@@ -22,6 +22,8 @@ function plot_achievement_radar(
   subjects_student = student_data.Subjects
   avg_scores_student = student_data.AvgScore
 
+  num_subjects = length(unique(subjects_all))
+
   fig = Figure(size=(800, 400))
   ax = PolarAxis(
     fig[1, 1],
@@ -31,7 +33,7 @@ function plot_achievement_radar(
     # Theta ticks setting / thetatick length=ticks+1 
     theta_0 = -pi/2,
     direction = -1,
-    thetaticks = (range(0, 2pi, length=8)[1:end-1],subjects_all),
+    thetaticks = (range(0, 2pi, length=num_subjects+1)[1:end-1],subjects_all),
     thetaticklabelsize=13,
     
     # Radius ticks setting
