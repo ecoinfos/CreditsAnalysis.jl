@@ -8,7 +8,7 @@ export load_exam_data, make_questions_colnames_vector,
        transform_omr_data, replace_missings_from_df, convert_column_types,
        remove_unnecessary_columns, remove_unnecessary_marks,
        find_missing_rows_dict, collect_results, convert_ox_to_scores!,
-       calculate_score_sums
+       calculate_score_sums, rename_exam_df_col_titles
 
 # 1. Load OMR data from csvs and prepare data dictionary
 
@@ -86,10 +86,18 @@ function transform_omr_data(
   frame will have the following columns: No, Grades, IDs, Names, Scores,
   TotalScores, Scores100, Ranks, DataGroups, and the questions columns
   that look line Q001, Q002, etc.
+  
+  For example, the resulting DataFrame looks like:
+  Row | No      Grades    IDs        ...  DataGroups  Q001    Q002    Q003
+      | Int64?  String7?  String15?       String7?    String1 String1 String1
+  ────┼──────────────────────────────────────────────────────────────────────
+    1 |       1 1         20200001   ...  정답        2       5       3 
+    2 | missing missing   20200001   ...  표기        2       5       1
+    3 | missing missing   20200001   ...  결과        O       O       X 
+    4 | ...
   """ 
 
-  # Select columns for questions
-  select!(df, Not(9 + no_questions + 1:size(df, 2)))
+  df_sel = select!(df, Not(9 + no_questions + 1:size(df, 2)))
 
   # Prepare column names
   new_parameters_col_names = [
@@ -104,12 +112,12 @@ function transform_omr_data(
     :DataGroups
   ]
   combined_col_names = vcat(new_parameters_col_names, new_questions_colnames)
-  rename!(df, combined_col_names)
+  rename!(df_sel, combined_col_names)
 
   # Remove the first row that contains missing values
-  df = df[2:end, :]
+  df_sel = df_sel[2:end, :]
   
-  return df
+  return df_sel
 end
 
 function replace_missings_from_df(df_transformed::DataFrame)::DataFrame
@@ -117,18 +125,32 @@ function replace_missings_from_df(df_transformed::DataFrame)::DataFrame
   Replace missing values in the transformed data frame with the values
   in the previous row. This is done to fill the missing values in the
   transformed data frame.
+
+  For example, the resulting DataFrame looks like:
+  Row | No      Grades    IDs        ...  DataGroups  Q001    Q002    Q003
+      | Int64?  String7?  String15?       String7?    String1 String1 String1
+  ────┼──────────────────────────────────────────────────────────────────────
+    1 |       1 1         20200001   ...  정답        2       5       3 
+    2 |       1 1         20200001   ...  표기        2       5       1
+    3 |       1 1         20200001   ...  결과        O       O       X 
+    4 | ...
+
+  Please compare this resulting DataFrame with the docstring example
+  DataFrame in the function `transform_omr_data`.
   """
-  for i in 1:3:size(df_transformed, 1)
-    if i + 2 <= size(df_transformed, 1)
+
+  df_copy = deepcopy(df_transformed)
+  for i in 1:3:size(df_copy, 1)
+    if i + 2 <= size(df_copy, 1)
       for j in i+1:i+2
         for col in 1:8 
-          df_transformed[j, col] = df_transformed[i, col]
+          df_copy[j, col] = df_copy[i, col]
         end
       end
     end
   end
 
-  return df_transformed
+  return df_copy
 end
 
 function convert_column_types(df_transformed::DataFrame)::DataFrame
@@ -250,8 +272,6 @@ function calculate_score_sums(df::DataFrame, col_prefix::String)::DataFrame
 
   return df
 end
-
-
 
 
 end
