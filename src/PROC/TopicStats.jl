@@ -5,8 +5,8 @@ using CSV
 using Statistics
 
 export join_scores_with_target_col, calculate_total_subject_avgs,
-       calculate_student_subject_avgs, calculate_accuracy_from_origin
-
+       calculate_student_subject_avgs, calculate_accuracy_from_origin,
+       create_total_exam_df_by_subject
 
 function join_scores_with_target_col(
   df_questions::DataFrame, df_anp_res::DataFrame, target_col::Symbol
@@ -89,6 +89,30 @@ function calculate_accuracy_from_origin(
   end
   
   return result_dict
+end
+
+function create_total_exam_df_by_subject(
+  df_midterm::DataFrame,
+  df_final::DataFrame,
+  mod_col_midterm::Symbol,
+  mod_col_final::Symbol,
+  prefix_midterm::String = "M_",
+  prefix_final::String = "F_"
+)
+
+  """
+
+  """
+
+  df_midterm_mod = transform(
+    df_midterm, mod_col_midterm => ByRow(x -> prefix_midterm * x) => mod_col_midterm
+  )
+  df_final_mod = transform(
+    df_final, mod_col_final => ByRow(x -> prefix_final * x) => mod_col_final
+  )
+  df_total = vcat(df_midterm_mod, df_final_mod)
+
+  return df_total
 end
 
 end
