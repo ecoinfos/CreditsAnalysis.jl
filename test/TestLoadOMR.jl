@@ -51,6 +51,14 @@ end
   @test_throws MethodError LO.make_questions_colnames_vector(test_no_q4)
 end
 
+df = DataFrame(
+  :Grades => Union{Int64, Missing}[1, 1, 1],
+  :IDs => Union{String, Missing}["2020194999", "2020194999", "2020194999"],
+  :Names => Union{String, Missing}["Jone", "Frank", "James"],
+  :DataGroups => Union{String, Missing}["Answer", "Response", "Result"]
+)
+df_converted = LO.convert_column_types(df)
+
 # OX into scores
 # histogram development
 # "results" extraction from the data df
@@ -96,7 +104,4 @@ end
   @test_throws ErrorException LO.convert_ox_to_scores!(
     df2, "Q", Dict("O"=>5, "X"=>0)
   )
-end
-
-@testset "question column creation test" begin
 end
