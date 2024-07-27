@@ -107,14 +107,10 @@ function create_total_exam_df_by_subject(
 
   ```julia
   df_midterm = DataFrame(
-    IDs = [1, 2],
-    QuestionIDs = ["Q001", "Q001"],
-    res = [0, 5]
+    IDs = [1, 2], QuestionIDs = ["Q001", "Q001"], res = [0, 5]
   )
   df_final = DataFrame(
-    IDs = [1, 2],
-    QuestionIDs = ["Q001", "Q001"],
-    res = [5, 5],
+    IDs = [1, 2], QuestionIDs = ["Q001", "Q001"], res = [5, 5]
   )
   mod_col_midterm = :QuestionIDs
   mod_col_final = :QuestionIDs
