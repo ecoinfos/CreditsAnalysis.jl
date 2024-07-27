@@ -1,53 +1,48 @@
 using DataFrames
 using Test
 
-import CreditsAnalysis.LoadOMR as LO
+import CreditsAnalysis.TopicStats as TS
 
-
-# OX into scores
-# histogram development
-# "results" extraction from the data df
-@testset "Extraction from OMR data test" begin
-  df = DataFrame(
-    SN = 1:6,
-    IDs = [2024194998, 2024194998, 2024194998, 2024194999, 2024194999, 2024194999],
-    Names = ["John", "John", "John", "Jane", "Jane", "Jane"],
-    DataGroups = ["ANS", "SANS", "RES", "ANS", "SANS", "RES"],
-    Q1 = ["1", "1", "O", "2", "1", "X"],
-    Q2 = ["1", "1", "O", "2", "2", "O"]
+@testset "concatenate two exam dataframes test" begin
+  df_midterm = DataFrame(
+    IDs = [1, 2], QuestionIDs = ["Q001", "Q001"], res = [0, 5]
   )
-
-  df_res = LO.collect_results(df, "RES")
-  df_length = length(df[!, 1])
-  @test length(df_res[!, 1]) == Int(df_length / 3)
-  @test unique(df_res.DataGroups) == ["RES"]
-  @test unique(df_res.Q1) == ["O", "X"]
-end
-
-@testset "OX to scores conversion test" begin
-  df1 = DataFrame(
-    SN = 1:2,
-    IDs = [2024194998, 2024194999],
-    Names = ["John", "Jane"],
-    DataGroups = ["RES", "RES"],
-    Q1 = ["O", "X"],
-    Q2 = ["O", "O"]
+  df_final = DataFrame(
+    IDs = [1, 2], QuestionIDs = ["Q001", "Q001"], res = [5, 5]
   )
-  df1_res = LO.convert_ox_to_scores!(df1, "Q", Dict("O"=>5, "X"=>0))
-  @test eltype(df1_res.Q1) == Int64
-  @test eltype(df1_res.Q2) == Int64
-  @test unique(df1_res.Q1) == [5, 0]
-
-  df2 = DataFrame(
-    SN = 1:2,
-    IDs = [2024194998, 2024194998],
-    Names = ["John", "Jane"],
-    DataGroups = ["RES", "RES"],
-    Q1 = ["O", "X"],
-    Q2 = ["O", "O"]
+  mod_col_midterm = :QuestionIDs
+  mod_col_final = :QuestionIDs
+  prefix_midterm = "M_"
+  prefix_final = "F_"
+  
+  df_total1 = TS.create_total_exam_df_by_subject(
+    df_midterm, df_final, mod_col_midterm, mod_col_final,
+    prefix_midterm, prefix_final
   )
-  @test_throws ErrorException LO.convert_ox_to_scores!(
-    df2, "Q", Dict("O"=>5, "X"=>0)
+  
+  df_total_expected1 = DataFrame(
+    IDs = [1, 2, 1, 2],
+    QuestionIDs = ["M_Q001", "M_Q001", "F_Q001", "F_Q001"],
+    res = [0, 5, 5, 5]
+  )
+  @test df_total1 == df_total_expected1
+  
+  df_midterm[2, 2] = "001"
+  df_total2 = TS.create_total_exam_df_by_subject(
+    df_midterm, df_final, mod_col_midterm, mod_col_final,
+    prefix_midterm, prefix_final
+  )
+  df_total_expected2 = DataFrame(
+    IDs = [1, 2, 1, 2],
+    QuestionIDs = ["M_Q001", "M_001", "F_Q001", "F_Q001"],
+    res = [0, 5, 5, 5]
+  )
+  @test df_total2 == df_total_expected2
+
+  df_midterm.QuestionIDs = Vector{Union{String, Int64}}(df_midterm.QuestionIDs)
+  df_midterm[2, 2] = 001 
+  @test_throws MethodError df_total3 = TS.create_total_exam_df_by_subject(
+    df_midterm, df_final, mod_col_midterm, mod_col_final,
+    prefix_midterm, prefix_final
   )
 end
-
