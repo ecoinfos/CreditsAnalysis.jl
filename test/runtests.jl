@@ -1,2 +1,2 @@
-include("TestLoadingScores.jl")
 include("TestLoadOMR.jl")
+include("TestTopicStats.jl")
