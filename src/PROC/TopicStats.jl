@@ -101,7 +101,43 @@ function create_total_exam_df_by_subject(
 )
 
   """
+  Add corresponding prefix to question IDs in the midterm and final exam
+  DataFrames. Then, concatenate the two DataFrames to create a total exam
+  DataFrame.
 
+  ```julia
+  df_midterm = DataFrame(
+    IDs = [1, 2],
+    QuestionIDs = ["Q001", "Q001"],
+    res = [0, 5]
+  )
+  df_final = DataFrame(
+    IDs = [1, 2],
+    QuestionIDs = ["Q001", "Q001"],
+    res = [5, 5],
+  )
+  mod_col_midterm = :QuestionIDs
+  mod_col_final = :QuestionIDs
+  prefix_midterm = "M_"
+  prefix_final = "F_"
+  
+  df_total = TS.create_total_exam_df_by_subject(
+    df_midterm,
+    df_final,
+    mod_col_midterm,
+    mod_col_final,
+    prefix_midterm,
+    prefix_final
+  )
+  ```
+  8×3 DataFrame
+  Row │ IDs    QuestionIDs  res
+      │ Int64  String       Int64
+  ────┼───────────────────────────
+    1 │     1  M_Q001           0
+    2 │     2  M_Q001           5
+    3 │     1  F_Q001           5
+    4 │     2  F_Q001           5
   """
 
   df_midterm_mod = transform(
