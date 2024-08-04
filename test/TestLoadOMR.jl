@@ -51,6 +51,18 @@ end
   @test_throws MethodError LO.make_questions_colnames_vector(test_no_q4)
 end
 
+
+df = DataFrame(SN = [1, 2, 3], A = [1, missing, missing])
+df_cleaned = LO.replace_missings_from_df(df)
+df_cleaned_expected = DataFrame(SN = 1:3, A = [1, 1, 1])
+df_cleaned_expected.A = convert(Vector{Union{Int64, Missing}}, df_cleaned_expected.A)
+@test df_cleaned == df_cleaned_expected 
+df_cleaned
+
+
+
+
+
 #df = DataFrame(
 #  :Grades => Union{Int64, Missing}[1, 1, 1],
 #  :IDs => Union{String, Missing}["2020194999", "2020194999", "2020194999"],
