@@ -140,11 +140,14 @@ function replace_missings_from_df(df_transformed::DataFrame)::DataFrame
   """
 
   df_copy = deepcopy(df_transformed)
+  cols_with_missing = findall(col -> any(ismissing, col), eachcol(df_copy))
   for i in 1:3:size(df_copy, 1)
     if i + 2 <= size(df_copy, 1)
       for j in i+1:i+2
-        for col in 1:8 
-          df_copy[j, col] = df_copy[i, col]
+        for col in cols_with_missing 
+          if  ismissing(df_copy[j, col])
+            df_copy[j, col] = df_copy[i, col]
+          end
         end
       end
     end
