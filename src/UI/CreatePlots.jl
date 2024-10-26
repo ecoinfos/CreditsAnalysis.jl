@@ -120,6 +120,8 @@ function plot_weekly_quiz_score(df_quiz_weekly::DataFrame, student_id::Int64)
   )
   student_df = filter(row -> row.IDs == student_id, df_weekly_score_sums)
 
+  student_df = sort(student_df, :Weeks)
+
   fig = Figure(size = (800, 400))
   ax = Axis(
     fig[1, 1],
