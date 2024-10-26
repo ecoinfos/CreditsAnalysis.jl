@@ -182,7 +182,7 @@ function plot_weekly_quiz_question_time(
   ax2 = Axis(
     fig[2, 1],
     xlabel = "Weeks",
-    xticks = 0:1:maximum(dict_quiz_purposes["ea"].Weeks),
+    xticks = 0:1:maximum(dict_quiz_purposes["aa"].Weeks),
     ylabel = "Average time (sec)",
     yminorticksvisible = true,
     yminorticks = IntervalsBetween(10),
@@ -203,8 +203,8 @@ function plot_weekly_quiz_question_time(
 
   box2 = boxplot!(
     ax2,
-    dict_quiz_purposes["ea"].Weeks,
-    dict_quiz_purposes["ea"].AvgTime,
+    dict_quiz_purposes["aa"].Weeks,
+    dict_quiz_purposes["aa"].AvgTime,
     show_outliers = false,
     color = :lightgray,
     gap = 0.5
@@ -228,16 +228,16 @@ function plot_weekly_quiz_question_time(
 
   line2 = lines!(
     ax2,
-    dict_quiz_purposes["es"].Weeks,
-    dict_quiz_purposes["es"].AvgTime,
+    dict_quiz_purposes["as"].Weeks,
+    dict_quiz_purposes["as"].AvgTime,
     color = :red,
     label = "Student ID: $student_id"
   )
 
   scatter!(
     ax2,
-    dict_quiz_purposes["es"].Weeks,
-    dict_quiz_purposes["es"].AvgTime,
+    dict_quiz_purposes["as"].Weeks,
+    dict_quiz_purposes["as"].AvgTime,
     color = :red,
     markersize = 10 
   )
