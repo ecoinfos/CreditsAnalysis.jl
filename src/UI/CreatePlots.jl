@@ -165,6 +165,11 @@ end
 function plot_weekly_quiz_question_time(
   dict_quiz_purposes::Dict, student_id::Int64
 )
+  dict_quiz_purposes["ua"] = sort(dict_quiz_purposes["ua"], :Weeks)
+  dict_quiz_purposes["aa"] = sort(dict_quiz_purposes["aa"], :Weeks)
+  dict_quiz_purposes["us"] = sort(dict_quiz_purposes["us"], :Weeks)
+  dict_quiz_purposes["as"] = sort(dict_quiz_purposes["as"], :Weeks)
+
   fig = Figure(size = (800, 600))
   ax1 = Axis(
     fig[1, 1],
@@ -189,7 +194,7 @@ function plot_weekly_quiz_question_time(
     yminorgridvisible = true,
     yminorgridstyle = :dot,
     yminorgridcolor = :gray90,
-    title = "Purpose: exploration"
+    title = "Purpose: application"
   )
 
   box1 = boxplot!(
