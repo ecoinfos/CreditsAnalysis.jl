@@ -47,49 +47,62 @@ end
 
 function calculate_accuracy_from_origin(
   df_joined::DataFrame,
-  student_id::Union{Int64, Nothing} = nothing
+  student_id::Union{Int64, Nothing} = nothing,
+  origin_types::Vector{String} = ["오리지널", "퀴즈", "형성평가", "강의영상"]
 )::Dict{String, Float64}
-
-  total_orig_rows = df_joined.Origin .== "오리지널"
-  total_quiz_rows = df_joined.Origin .== "퀴즈"
   
-  total_orig_correct = count(df_joined[total_orig_rows, :Score] .!= 0)
-  total_quiz_correct = count(df_joined[total_quiz_rows, :Score] .!= 0)
+  result_dict = Dict{String, Float64}()
   
-  total_orig_total = count(total_orig_rows)
-  total_quiz_total = count(total_quiz_rows)
-  
-  total_orig_accuracy = total_orig_correct / total_orig_total * 100
-  total_quiz_accuracy = total_quiz_correct / total_quiz_total * 100
-  
-  result_dict = Dict{String, Float64}(
-    "total_orig_accuracy" => total_orig_accuracy,
-    "total_quiz_accuracy" => total_quiz_accuracy
+  # 기존 호환성을 위한 매핑 정의
+  key_mapping = Dict(
+    "오리지널" => "orig",
+    "퀴즈" => "quiz",
+    "형성평가" => "formative",
+    "강의영상" => "lecture_clip"
   )
   
-  if student_id === nothing
-    result_dict["student_orig_accuracy"] = NaN
-    result_dict["student_quiz_accuracy"] = NaN
-  else
+  # 전체 학생 정확도 계산
+  for origin in origin_types
+    origin_rows = df_joined.Origin .== origin
+    origin_correct = count(df_joined[origin_rows, :Score] .!= 0)
+    origin_total = count(origin_rows)
+    
+    # 분모가 0인 경우 처리
+    origin_accuracy = origin_total > 0 ? (origin_correct / origin_total * 100) : NaN
+    
+    # 기존 키 규칙 유지 (오리지널 -> orig, 퀴즈 -> quiz 등)
+    key_suffix = get(key_mapping, origin, lowercase(origin))
+    result_dict["total_$(key_suffix)_accuracy"] = origin_accuracy
+  end
+  
+  # 특정 학생 정확도 계산
+  if student_id !== nothing
     student_rows = df_joined.IDs .== student_id
-    student_orig_rows = student_rows .& (df_joined.Origin .== "오리지널")
-    student_quiz_rows = student_rows .& (df_joined.Origin .== "퀴즈")
     
-    student_orig_correct = count(df_joined[student_orig_rows, :Score] .!= 0)
-    student_quiz_correct = count(df_joined[student_quiz_rows, :Score] .!= 0)
-    
-    student_orig_total = count(student_orig_rows)
-    student_quiz_total = count(student_quiz_rows)
-    
-    student_orig_accuracy = student_orig_correct / student_orig_total * 100
-    student_quiz_accuracy = student_quiz_correct / student_quiz_total * 100
-    
-    result_dict["student_orig_accuracy"] = student_orig_accuracy
-    result_dict["student_quiz_accuracy"] = student_quiz_accuracy
+    for origin in origin_types
+      student_origin_rows = student_rows .& (df_joined.Origin .== origin)
+      student_origin_correct = count(df_joined[student_origin_rows, :Score] .!= 0)
+      student_origin_total = count(student_origin_rows)
+      
+      # 분모가 0인 경우 처리
+      student_origin_accuracy = student_origin_total > 0 ? 
+                               (student_origin_correct / student_origin_total * 100) : NaN
+      
+      # 기존 키 규칙 유지
+      key_suffix = get(key_mapping, origin, lowercase(origin))
+      result_dict["student_$(key_suffix)_accuracy"] = student_origin_accuracy
+    end
+  else
+    # student_id가 없는 경우, 모든 출처 유형에 대해 NaN 값 설정
+    for origin in origin_types
+      key_suffix = get(key_mapping, origin, lowercase(origin))
+      result_dict["student_$(key_suffix)_accuracy"] = NaN
+    end
   end
   
   return result_dict
 end
+
 
 function create_total_exam_df_by_subject(
   df_midterm::DataFrame,
