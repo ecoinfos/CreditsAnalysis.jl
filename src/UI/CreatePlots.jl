@@ -76,41 +76,52 @@ function plot_achievement_radar(
 end
 
 function plot_origin_accuracy(accuracy_dict::Dict{String, Float64}, student_id::Int64)
-    categories = ["Original", "Quiz"]
+    categories = ["original", "quiz", "formative", "lecture_clip"]
     bar_labels = ["Total", "$student_id"]
-
+    
     # Create table-like data structure
     tbl = (
-        cat = [1, 1, 2, 2],
+        cat = [1, 1, 2, 2, 3, 3, 4, 4],  # 1-4까지 각 카테고리마다 2개씩 (Total, student)
         height = [
-            accuracy_dict["total_orig_accuracy"],
-            accuracy_dict["student_orig_accuracy"],
-            accuracy_dict["total_quiz_accuracy"],
-            accuracy_dict["student_quiz_accuracy"]
+            get(accuracy_dict, "total_orig_accuracy", NaN),
+            get(accuracy_dict, "student_orig_accuracy", NaN),
+            get(accuracy_dict, "total_quiz_accuracy", NaN),
+            get(accuracy_dict, "student_quiz_accuracy", NaN),
+            get(accuracy_dict, "total_formative_accuracy", NaN),  # 수정: assessment -> formative
+            get(accuracy_dict, "student_formative_accuracy", NaN), # 수정: assessment -> formative
+            get(accuracy_dict, "total_lecture_clip_accuracy", NaN),     # 수정: lecture -> lecture_clip
+            get(accuracy_dict, "student_lecture_clip_accuracy", NaN)    # 수정: lecture -> lecture_clip
         ],
-        grp = [1, 2, 1, 2]
+        grp = [1, 2, 1, 2, 1, 2, 1, 2]  # 각 카테고리별로 1(Total)과 2(student) 그룹 지정
     )
-
-    fig = Figure(size = (600, 400))
+    
+    # NaN 값 대신 0 표시 (선택적)
+    tbl = (
+        cat = tbl.cat,
+        height = [isnan(h) ? 0.0 : h for h in tbl.height],
+        grp = tbl.grp
+    )
+    
+    fig = Figure(size = (800, 400))  # 더 많은 카테고리를 표시하기 위해 너비 증가
     ax = Axis(
         fig[1, 1],
         ylabel = "Accuracy (%)",
-        xticks = (1:2, categories),
-        limits = ((0.5, 2.5), (0, 100)),
+        xticks = (1:4, categories),  # 4개 카테고리로 수정
+        limits = ((0.5, 4.5), (0, 100)),  # x축 범위를 4개 카테고리에 맞게 조정
         yticksvisible = true,
         yticks = 0:20:100,
     )
-
+    
     # Define colors for each group
     colors = [:dodgerblue, :crimson]
-
+    
     # Plot bars with dodge
     barplot!(ax, tbl.cat, tbl.height, dodge = tbl.grp, color = colors[tbl.grp])
-
+    
     # Create legend
     elements = [PolyElement(polycolor = colors[i]) for i in 1:length(bar_labels)]
     legend = Legend(fig[1, 2], elements, bar_labels, labelsize=10)
-
+    
     return fig
 end
 
