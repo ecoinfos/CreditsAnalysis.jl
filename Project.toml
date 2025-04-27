@@ -17,6 +17,7 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
 LanguageServer = "4.5.1"
+Luxor = "4"
 OhMyREPL = "0.5.31"
 julia = "1"
 
